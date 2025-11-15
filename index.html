@@ -218,7 +218,7 @@
       border: none;
       font-size: 11px;
       font-weight: 700;
-      display: none;              /* HIDDEN by default */
+      display: none;              /* hidden by default */
       align-items: center;
       justify-content: center;
       padding: 0 8px;
@@ -226,7 +226,7 @@
     }
 
     .spotSwipe.open .spotDeleteBtn {
-      display: flex;              /* Only visible when swiped open */
+      display: flex;              /* only visible when swiped open */
     }
 
     .spotDeleteBtn span {
@@ -277,7 +277,8 @@
     }
 
     .addPhotoBtn,
-    .removePhotoBtn {
+    .removePhotoBtn,
+    .streetViewBtn {
       padding: 4px 9px;
       border-radius: 999px;
       font-size: 11px;
@@ -299,6 +300,12 @@
       background: rgba(248, 113, 113, 0.16);
       border-color: rgba(248, 113, 113, 0.8);
       color: #fca5a5;
+    }
+
+    .streetViewBtn {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: rgba(59, 130, 246, 0.8);
+      color: #93c5fd;
     }
 
     .addPhotoBtn span.plus,
@@ -720,7 +727,6 @@
           const dx = currentX - startX;
 
           if (dx < 0) {
-            // swiping left
             if (!isSwiping && Math.abs(dx) > 5) {
               isSwiping = true;
             }
@@ -751,7 +757,6 @@
           isSwiping = false;
         });
 
-        // tap anywhere else closes the slide
         wrapper.addEventListener("click", (e) => {
           if (wrapper.classList.contains("open") && !deleteBtn.contains(e.target)) {
             wrapper.classList.remove("open");
@@ -765,7 +770,6 @@
         if (idx === -1) return;
         const spot = spots[idx];
 
-        // remove marker from map
         if (spot.marker) {
           map.removeLayer(spot.marker);
         }
@@ -790,8 +794,7 @@
           const deleteBtn = document.createElement("button");
           deleteBtn.className = "spotDeleteBtn";
           deleteBtn.dataset.id = spot.id;
-          deleteBtn.innerHTML =
-            'Remove spot<span>⟶</span>';
+          deleteBtn.innerHTML = 'Remove spot<span>⟶</span>';
 
           const card = document.createElement("div");
           card.className = "spotItem";
@@ -815,6 +818,9 @@
                          </div>`
                       : ""
                   }
+                  <div class="streetViewBtn" data-lat="${spot.lat}" data-lng="${spot.lng}">
+                    Street view
+                  </div>
                 </div>
               </div>
             </div>
@@ -834,11 +840,12 @@
             }
           `;
 
-          // card tap -> fly to marker (only if not clicking buttons)
+          // card tap -> fly to marker (ignore button taps)
           card.addEventListener("click", (e) => {
             if (
               e.target.closest(".addPhotoBtn") ||
-              e.target.closest(".removePhotoBtn")
+              e.target.closest(".removePhotoBtn") ||
+              e.target.closest(".streetViewBtn")
             ) {
               return;
             }
@@ -872,6 +879,18 @@
               renderSpotsList();
             });
           }
+
+          // Street view
+          const streetBtn = card.querySelector(".streetViewBtn");
+          streetBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            const url =
+              "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=" +
+              spot.lat +
+              "," +
+              spot.lng;
+            window.open(url, "_blank");
+          });
 
           // delete spot
           deleteBtn.addEventListener("click", (ev) => {
@@ -968,7 +987,7 @@
         saveSpots();
       }
 
-      // Map click → open modal (instead of prompt)
+      // Map click → open modal
       map.on("click", (e) => {
         openSpotModal(e.latlng);
       });
