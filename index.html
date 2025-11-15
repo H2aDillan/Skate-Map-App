@@ -41,7 +41,57 @@
       overflow: hidden;
     }
 
-    /* --- FIXED HEADER STYLES --- */
+    /* --- NEW: LOADING SCREEN --- */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: #020617;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+    #loadingOverlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    #loadingOverlay h1 {
+      font-size: 2.5rem;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    #loadingOverlay p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    #skateboarder {
+      width: 100px;
+      margin-bottom: -15px;
+      animation: spin-jump 1.2s ease-in-out infinite;
+    }
+
+    @keyframes spin-jump {
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-30px) rotate(360deg);
+      }
+      100% {
+        transform: translateY(0) rotate(360deg);
+      }
+    }
+    /* --- END: LOADING SCREEN --- */
+
+
+    /* --- HEADER STYLES --- */
     header {
       padding: 10px 14px;
       background: rgba(15, 23, 42, 0.95);
@@ -290,6 +340,7 @@
       position: relative;
       z-index: 1;
       transition: transform 0.2s ease-out;
+      transform: translateX(0);
     }
 
     .spotSwipe.open .spotItem {
@@ -408,8 +459,9 @@
       opacity: 0.95;
     }
 
-    /* MODAL: NEW SPOT NAME */
-    #spotModalBackdrop {
+    /* --- MODAL STYLES (for both new spot and remove spot) --- */
+    /* Shared styles for modal backdrops */
+    .modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.88);
@@ -420,11 +472,12 @@
       backdrop-filter: blur(10px);
     }
 
-    #spotModalBackdrop.open {
+    .modal-backdrop.open {
       display: flex;
     }
 
-    #spotModal {
+    /* Shared styles for modal containers */
+    .modal-container {
       width: 90%;
       max-width: 420px;
       background: radial-gradient(circle at top left, #0f172a, #020617);
@@ -491,6 +544,12 @@
       border: 1px solid rgba(148, 163, 184, 0.7);
     }
 
+    .modalBtn.confirm-danger { /* Specific style for remove confirmation */
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: #fee2e2;
+      box-shadow: 0 0 14px rgba(249, 115, 115, 0.7);
+    }
+
     .modalBtn.save {
       background: linear-gradient(135deg, var(--accent), var(--accent-soft));
       color: #020617;
@@ -501,6 +560,7 @@
       transform: scale(0.97);
       opacity: 0.95;
     }
+    /* --- END MODAL STYLES --- */
     
     /* HUB BAR */
     #hubBar {
@@ -524,6 +584,7 @@
       padding: 4px;
       color: var(--muted);
       box-shadow: none;
+      transition: color 0.2s, box-shadow 0.2s; /* Added transition */
     }
     
     .hubBtn svg {
@@ -543,6 +604,11 @@
       opacity: 0.8;
     }
     
+    .hubBtn.saved-highlight {
+      color: var(--accent);
+      box-shadow: 0 0 15px 5px rgba(34, 197, 94, 0.7);
+    }
+    
     #hubAdd svg {
       stroke-width: 1.5;
       background: var(--text);
@@ -555,6 +621,23 @@
     #hubAdd:active svg {
       transform: none;
       opacity: 0.9;
+    }
+
+    #saveIndicator {
+      position: absolute;
+      bottom: 60px; /* Just above the 60px hub bar */
+      left: 75%; /* Align with the 4th icon (spots) */
+      transform: translateX(-50%) translateY(10px); /* Center on icon, start hidden */
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    #saveIndicator.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
 
     /* TOAST NOTIFICATION */
@@ -627,6 +710,17 @@
 </head>
 <body>
 
+  <div id="loadingOverlay">
+    <svg id="skateboarder" viewBox="-10 -15 120 60">
+        <line x1="50" y1="20" x2="50" y2="0" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <circle cx="50" cy="-5" r="5" fill="var(--text)"/> <line x1="50" y1="20" x2="35" y2="30" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <line x1="50" y1="20" x2="65" y2="30" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <g id="board">
+            <rect x="10" y="30" width="80" height="8" rx="4" fill="var(--accent)"/>
+            <circle cx="25" cy="40" r="5" fill="#fff"/>
+            <circle cx="75" cy="40" r="5" fill="#fff"/>
+        </g>
+    </svg>
+    <h1>Skate Maps</h1>
+    <p>created by Dillan Swanepoel</p>
+  </div>
   <div id="sideMenuBackdrop"></div>
   <nav id="sideMenu">
     <h2 style="color: var(--text);">Coming soon</h2>
@@ -648,8 +742,8 @@
     <div class="header-zone right">
       <div id="controls">
         <div id="mapModeSwitcher">
-          <button class="modeBtn active" data-mode="street">Map</button>
-          <button class="modeBtn" data-mode="sat">Sat</button>
+          <button class="modeBtn" data-mode="street">Map</button>
+          <button class="modeBtn active" data-mode="sat">Sat</button>
         </div>
         <button id="locateBtn">Locate me</button>
       </div>
@@ -683,8 +777,8 @@
 
   <input type="file" id="photoInput" accept="image/*" style="display:none" />
 
-  <div id="spotModalBackdrop">
-    <div id="spotModal">
+  <div id="spotModalBackdrop" class="modal-backdrop">
+    <div id="spotModal" class="modal-container">
       <div class="modalTitle">Save skate spot</div>
       <div class="modalSubtitle">
         Give this spot a name so you and your friends can find it later.
@@ -704,6 +798,19 @@
     </div>
   </div>
 
+  <div id="removeSpotModalBackdrop" class="modal-backdrop">
+    <div id="removeSpotModal" class="modal-container">
+      <div class="modalTitle">Remove skate spot?</div>
+      <div class="modalSubtitle">
+        Are you sure you want to remove this skate spot? This action cannot be undone.
+      </div>
+      <div class="modalActions">
+        <button id="removeSpotCancelBtn" class="modalBtn cancel">Cancel</button>
+        <button id="removeSpotConfirmBtn" class="modalBtn confirm-danger">Remove Spot</button>
+      </div>
+    </div>
+  </div>
+  
   <nav id="hubBar">
     <button class="hubBtn" id="hubHome">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -730,6 +837,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
       </svg>
     </button>
+    <div id="saveIndicator">Saved!</div>
   </nav>
 
   <div id="toast">Coming soon!</div>
@@ -741,6 +849,16 @@
       document.getElementById("mapFallback").innerText =
         "Map failed to load. Check that you are online.";
     } else {
+      // Hide loading screen after 1.5s
+      window.onload = () => {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        setTimeout(() => {
+          if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+          }
+        }, 1500); // 1.5 seconds
+      };
+      
       document.getElementById("mapFallback").style.display = "none";
 
       const STORAGE_KEY = "skateSpots_v3";
@@ -776,16 +894,22 @@
       const spotNameInput = document.getElementById("spotNameInput");
       const spotCancelBtn = document.getElementById("spotCancelBtn");
       const spotSaveBtn = document.getElementById("spotSaveBtn");
+      
+      // --- NEW: Remove Spot Modal elements ---
+      const removeSpotModalBackdrop = document.getElementById("removeSpotModalBackdrop");
+      const removeSpotCancelBtn = document.getElementById("removeSpotCancelBtn");
+      const removeSpotConfirmBtn = document.getElementById("removeSpotConfirmBtn");
 
       const modeButtons = document.querySelectorAll(".modeBtn");
       
       const toast = document.getElementById("toast");
       let toastTimer = null;
       
-      // --- NEW: Side Menu elements ---
       const menuBtn = document.getElementById("menuBtn");
       const sideMenu = document.getElementById("sideMenu");
       const sideMenuBackdrop = document.getElementById("sideMenuBackdrop");
+      
+      const saveIndicator = document.getElementById("saveIndicator");
 
       let map;
       let streetLayer;
@@ -796,7 +920,6 @@
       let pendingLatLng = null;
       let pendingMarker = null;
       
-      // --- NEW: Red Marker Icon ---
       const redIcon = new L.Icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -818,7 +941,7 @@
         }, 2000); // Show for 2 seconds
       }
       
-      // --- NEW: Side Menu Function ---
+      // Side Menu Function
       function toggleMenu() {
         sideMenu.classList.toggle('open');
         sideMenuBackdrop.classList.toggle('open');
@@ -847,7 +970,7 @@
         }
       );
 
-      streetLayer.addTo(map);
+      satelliteLayer.addTo(map);
       
       L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -946,20 +1069,26 @@
           return "Unknown time";
         }
       }
-
+      
+      // --- UPDATED SWIPE HANDLER ---
       function attachSwipeHandlers(wrapper, card, deleteBtn, spotId) {
         let startX = null;
         let currentX = null;
         let isSwiping = false;
 
         const maxShift = 115;
-        const openThreshold = 60;
+        const openThreshold = 60; // Swiped 60px
 
         function setTranslate(x) {
           card.style.transform = `translateX(${x}px)`;
         }
 
         card.addEventListener("touchstart", (e) => {
+          // Don't swipe if clicking a button inside
+          if (e.target.closest('button, .addPhotoBtn, .removePhotoBtn, .streetViewBtn')) {
+            startX = null;
+            return;
+          }
           const touch = e.touches[0];
           startX = touch.clientX;
           currentX = startX;
@@ -971,40 +1100,65 @@
           const touch = e.touches[0];
           currentX = touch.clientX;
           const dx = currentX - startX;
+          
+          if (!isSwiping && Math.abs(dx) > 10) { // Start swiping after 10px move
+             isSwiping = true;
+          }
 
-          if (dx < 0) {
-            if (!isSwiping && Math.abs(dx) > 5) {
-              isSwiping = true;
-            }
-            if (isSwiping) {
-              e.preventDefault();
-              const shift = Math.max(-maxShift, dx);
+          if (isSwiping) {
+            e.preventDefault(); // Prevent page scroll
+            const isOpen = wrapper.classList.contains("open");
+            
+            if (isOpen) {
+              // Card is open, user is swiping right to close
+              const shift = Math.max(-maxShift, Math.min(0, -maxShift + dx));
+              setTranslate(shift);
+            } else {
+              // Card is closed, user is swiping left to open
+              const shift = Math.max(-maxShift, Math.min(0, dx));
               setTranslate(shift);
             }
           }
         });
 
         card.addEventListener("touchend", () => {
-          if (!isSwiping) {
+          if (startX === null || !isSwiping) {
             startX = null;
             currentX = null;
             return;
           }
+          
           const dx = currentX - startX;
-          if (dx < -openThreshold) {
-            wrapper.classList.add("open");
-            setTranslate(-maxShift);
+          const isOpen = wrapper.classList.contains("open");
+
+          if (isOpen) {
+            // Card was open, check for close swipe (swipe right)
+            if (dx > openThreshold) {
+              wrapper.classList.remove("open");
+              setTranslate(0);
+            } else {
+              // Not enough, snap back open
+              wrapper.classList.add("open"); // Ensure class is still there
+              setTranslate(-maxShift);
+            }
           } else {
-            wrapper.classList.remove("open");
-            setTranslate(0);
+            // Card was closed, check for open swipe (swipe left)
+            if (dx < -openThreshold) {
+              wrapper.classList.add("open");
+              setTranslate(-maxShift);
+            } else {
+              // Not enough, snap back closed
+              wrapper.classList.remove("open"); // Ensure class is not there
+              setTranslate(0);
+            }
           }
+          
           startX = null;
           currentX = null;
           isSwiping = false;
         });
-
-
-
+        
+        // This handles tapping "off" the delete button to close
         wrapper.addEventListener("click", (e) => {
           if (wrapper.classList.contains("open") && !deleteBtn.contains(e.target)) {
             wrapper.classList.remove("open");
@@ -1012,6 +1166,8 @@
           }
         });
       }
+      // --- END: UPDATED SWIPE HANDLER ---
+
 
       function removeSpotById(id) {
         const idx = spots.findIndex((s) => s.id === id);
@@ -1027,6 +1183,39 @@
         saveSpots();
         renderSpotsList();
       }
+      
+      
+      // --- NEW: Remove Spot Modal Logic ---
+      let resolveRemoveConfirmation; // Stores the promise's resolve function
+
+      function openRemoveSpotModal(spotId) {
+        return new Promise((resolve) => {
+          // Store the resolve function so we can call it later
+          resolveRemoveConfirmation = resolve;
+          removeSpotModalBackdrop.classList.add("open");
+        });
+      }
+
+      function closeRemoveSpotModal() {
+        resolveRemoveConfirmation = null; // Clear the stored resolve
+        removeSpotModalBackdrop.classList.remove("open");
+      }
+
+      removeSpotCancelBtn.addEventListener("click", () => {
+        if (resolveRemoveConfirmation) {
+          resolveRemoveConfirmation(false); // Resolve with "false" (Cancel)
+        }
+        closeRemoveSpotModal();
+      });
+      
+      removeSpotConfirmBtn.addEventListener("click", () => {
+        if (resolveRemoveConfirmation) {
+          resolveRemoveConfirmation(true); // Resolve with "true" (Remove)
+        }
+        closeRemoveSpotModal();
+      });
+      // --- END: Remove Spot Modal Logic ---
+      
 
       function renderSpotsList() {
         spotsList.innerHTML = "";
@@ -1093,7 +1282,9 @@
             if (
               e.target.closest(".addPhotoBtn") ||
               e.target.closest(".removePhotoBtn") ||
-              e.target.closest(".streetViewBtn")
+              e.target.closest(".streetViewBtn") ||
+              e.target.closest(".spotDeleteBtn") ||
+              wrapper.classList.contains("open") // If it's open, don't fly to map
             ) {
               return;
             }
@@ -1113,15 +1304,19 @@
           // photo remove
           const removePhotoBtn = card.querySelector(".removePhotoBtn");
           if (removePhotoBtn) {
-            removePhotoBtn.addEventListener("click", (ev) => {
+            removePhotoBtn.addEventListener("click", async (ev) => { // Make async
               ev.stopPropagation();
               const target = spots.find((s) => s.id === spot.id);
               if (!target || !target.photoData) return;
               if (target.photoData.owner !== DEVICE_ID) {
+                // Use a custom alert if you want, for now default
                 alert("You can only remove your own photo.");
                 return;
               }
-              if (!confirm("Remove this photo from the spot?")) return;
+              // --- Use new modal ---
+              const confirmed = await openRemoveSpotModal();
+              if (!confirmed) return;
+              
               target.photoData = null;
               saveSpots();
               renderSpotsList();
@@ -1136,10 +1331,14 @@
           });
 
           // delete spot
-          deleteBtn.addEventListener("click", (ev) => {
+          deleteBtn.addEventListener("click", async (ev) => { // Make async
             ev.stopPropagation();
-            if (!confirm("Remove this skate spot?")) return;
-            removeSpotById(spot.id);
+            
+            // --- Use new modal ---
+            const confirmed = await openRemoveSpotModal();
+            if (confirmed) {
+              removeSpotById(spot.id);
+            }
           });
 
           wrapper.appendChild(deleteBtn);
@@ -1201,6 +1400,18 @@
         }
         
         closeSpotModal();
+        
+        // --- Show save feedback ---
+        const hubSpotsIcon = document.getElementById("hubSpots");
+        
+        hubSpotsIcon.classList.add("saved-highlight");
+        saveIndicator.classList.add("show");
+        
+        setTimeout(() => {
+            hubSpotsIcon.classList.remove("saved-highlight");
+            saveIndicator.classList.remove("show");
+        }, 2000);
+        // --- End save feedback ---
       });
 
       spotNameInput.addEventListener("keydown", (e) => {
@@ -1261,8 +1472,7 @@
         }).addTo(map);
         
         
-        // --- THIS IS THE FIX ---
-        // Create the popup content as a DOM node
+        // --- Create popup content and add listener ---
         const popupContentNode = document.createElement('div');
         popupContentNode.style = "text-align: center; font-size: 12px; line-height: 1.4;";
         popupContentNode.innerHTML = `
@@ -1271,7 +1481,6 @@
             <a href="#" class="remove-pin-link">Remove pin</a>
         `;
         
-        // Find the link inside the node and add the click listener
         const removeLink = popupContentNode.querySelector('.remove-pin-link');
         removeLink.addEventListener('click', (ev) => {
             ev.preventDefault();
@@ -1282,9 +1491,8 @@
             }
         });
 
-        // Bind the popup node
         pendingMarker.bindPopup(popupContentNode).openPopup();
-        // --- END OF FIX ---
+        // --- End popup logic ---
 
 
         // When this temporary pin is clicked, open the modal
