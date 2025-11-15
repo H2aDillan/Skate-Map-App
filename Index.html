@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Skate Spots Map</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    :root {
+      --bg: #050814;
+      --panel: #0b1020;
+      --accent: #22c55e;
+      --accent-soft: #16a34a;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: #020617;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    header {
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    header .title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    header .subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    #locStatus {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: #020617;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    }
+
+    button:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+
+    /* MAP */
+    #map {
+      width: 100%;
+      height: 60vh;
+      background: #020617;
+    }
+
+    .leaflet-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Spots panel */
+    #spotsPanel {
+      height: calc(40vh - 10px);
+      background: rgba(15, 23, 42, 0.98);
+      border-top: 1px solid rgba(148, 163, 184, 0.3);
+      display: flex;
+      flex-direction: column;
+      font-size: 11px;
+    }
+
+    #spotsHeader {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #spotsCount {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    #spotsList {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 6px 10px;
+    }
+
+    .spotItem {
+      background: linear-gradient(
+        145deg,
+        rgba(15, 23, 42, 0.95),
+        rgba(30, 64, 175, 0.5)
+      );
+      border-radius: 10px;
+      padding: 8px 9px;
+      margin-bottom: 7px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .spotName {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .spotCoords {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .spotMeta {
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.18);
+      border: 1px solid rgba(45, 212, 191, 0.5);
+      padding: 1px 6px;
+      margin-top: 3px;
+    }
+
+    .chipDot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    #hint {
+      padding: 6px 10px 8px;
+      font-size: 10px;
+      color: var(--muted);
+      border-top: 1px dashed rgba(148, 163, 184, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title">Skate Spots</div>
+      <div class="subtitle">Tap map to drop a new spot</div>
+      <div id="locStatus"></div>
+    </div>
+    <div id="controls">
+      <button id="locateBtn">Locate me</button>
+    </div>
+  </header>
+
+  <!-- MAP -->
+  <div id="map">
+    <div id="mapFallback" style="color:#9ca3af;padding:10px;font-size:12px;">
+      Loading map…
+    </div>
+  </div>
+
+  <!-- Spots list -->
+  <aside id="spotsPanel">
+    <div id="spotsHeader">
+      <span>My session spots</span>
+      <span id="spotsCount">0 spots</span>
+    </div>
+    <div id="spotsList"></div>
+    <div id="hint">
+      • Tap the map to add a skate spot with a name.<br />
+      • Spots are now saved on this device (localStorage).<br />
+      • Next step: real database so all skaters share spots.
+    </div>
+  </aside>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    if (typeof L === "undefined") {
+      document.getElementById("mapFallback").innerText =
+        "Map failed to load. Check that you are online.";
+    } else {
+      document.getElementById("mapFallback").style.display = "none";
+
+      const STORAGE_KEY = "skateSpots_v1";
+
+      // runtime spots: includes marker objects (not stored)
+      const spots = [];
+      const locStatus = document.getElementById("locStatus");
+
+      const map = L.map("map", { zoomControl: true }).setView([0, 0], 2);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+
+      const locateBtn = document.getElementById("locateBtn");
+      const spotsList = document.getElementById("spotsList");
+      const spotsCount = document.getElementById("spotsCount");
+
+      let userMarker = null;
+      let userCircle = null;
+
+      // ---------- localStorage helpers ----------
+
+      function saveSpotsToStorage() {
+        const data = spots.map((s) => ({
+          name: s.name,
+          lat: s.lat,
+          lng: s.lng,
+          createdAt: s.createdAt
+        }));
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.warn("Failed to save spots:", e);
+        }
+      }
+
+      function loadSpotsFromStorage() {
+        let raw = null;
+        try {
+          raw = localStorage.getItem(STORAGE_KEY);
+        } catch (e) {
+          console.warn("Failed to read spots from storage:", e);
+          return;
+        }
+        if (!raw) return;
+        let arr;
+        try {
+          arr = JSON.parse(raw);
+        } catch (e) {
+          console.warn("Bad spots JSON:", e);
+          return;
+        }
+        if (!Array.isArray(arr)) return;
+
+        arr.forEach((s) => {
+          const latlng = { lat: s.lat, lng: s.lng };
+          const marker = L.marker(latlng).addTo(map);
+          marker.bindPopup(`<b>${s.name}</b><br>Street spot demo`);
+          spots.push({
+            name: s.name,
+            lat: s.lat,
+            lng: s.lng,
+            createdAt: s.createdAt || Date.now(),
+            marker
+          });
+        });
+
+        if (spots.length) {
+          // center roughly around the first stored spot
+          map.setView([spots[0].lat, spots[0].lng], 13);
+        }
+
+        renderSpotsList();
+      }
+
+      // ---------- UI ----------
+
+      function formatTime(ts) {
+        if (!ts) return "Unknown time";
+        try {
+          return new Date(ts).toLocaleString();
+        } catch {
+          return "Unknown time";
+        }
+      }
+
+      function renderSpotsList() {
+        spotsList.innerHTML = "";
+        spots.forEach((spot, idx) => {
+          const div = document.createElement("div");
+          div.className = "spotItem";
+          div.innerHTML = `
+            <div class="spotName">${idx + 1}. ${spot.name}</div>
+            <div class="spotCoords">
+              Lat: ${spot.lat.toFixed(5)}, Lng: ${spot.lng.toFixed(5)}
+            </div>
+            <div class="spotMeta">
+              Added: ${formatTime(spot.createdAt)}
+              <div class="chip">
+                <span class="chipDot"></span>
+                <span>Street spot</span>
+              </div>
+            </div>
+          `;
+          div.onclick = () => {
+            map.setView([spot.lat, spot.lng], 18);
+            if (spot.marker) spot.marker.openPopup();
+          };
+          spotsList.appendChild(div);
+        });
+        spotsCount.textContent =
+          spots.length === 1 ? "1 spot" : spots.length + " spots";
+      }
+
+      function addSpot(latlng, name) {
+        const marker = L.marker(latlng).addTo(map);
+        marker.bindPopup(`<b>${name}</b><br>Street spot demo`);
+        const spot = {
+          name,
+          lat: latlng.lat,
+          lng: latlng.lng,
+          createdAt: Date.now(),
+          marker
+        };
+        spots.push(spot);
+        renderSpotsList();
+        saveSpotsToStorage();
+      }
+
+      // Add spot on map tap
+      map.on("click", function (e) {
+        const name = prompt("Name this skate spot:");
+        if (!name || !name.trim()) return;
+        addSpot(e.latlng, name.trim());
+      });
+
+      // Location (still here; works when browser allows it)
+      function requestLocation(showMessages) {
+        if (!("geolocation" in navigator)) {
+          if (showMessages) {
+            locStatus.textContent = "Geolocation not supported on this device.";
+          }
+          return;
+        }
+
+        function doLocate() {
+          if (showMessages) {
+            locStatus.textContent = "Requesting your location…";
+          }
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              const acc = pos.coords.accuracy || 50;
+
+              if (userMarker) map.removeLayer(userMarker);
+              if (userCircle) map.removeLayer(userCircle);
+
+              const latlng = { lat, lng };
+              userMarker = L.circleMarker(latlng, { radius: 7 })
+                .addTo(map)
+                .bindPopup("You are here");
+              userMarker.openPopup();
+
+              userCircle = L.circle(latlng, acc).addTo(map);
+
+              map.setView(latlng, 16);
+              locStatus.textContent = "Location found.";
+            },
+            (err) => {
+              console.warn("Geolocation error:", err);
+              if (showMessages) {
+                if (err.code === err.PERMISSION_DENIED) {
+                  locStatus.textContent =
+                    "Location denied. You can enable Location for this site in browser settings.";
+                } else {
+                  locStatus.textContent =
+                    "Could not get your location (GPS or network error).";
+                }
+              }
+            },
+            { enableHighAccuracy: true }
+          );
+        }
+
+        // permissions API is optional; we just try locate directly
+        doLocate();
+      }
+
+      locateBtn.addEventListener("click", () => requestLocation(true));
+
+      // Load stored spots on startup
+      loadSpotsFromStorage();
+
+      // Optional: silent locate try
+      requestLocation(false);
+    }
+  </script>
+</body>
+</html>
