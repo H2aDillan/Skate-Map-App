@@ -24,6 +24,8 @@
       --blue-soft: #2563eb;
       --star: #facc15; /* Yellow for stars */
       --star-empty: #4b5563; /* Muted gray for empty stars */
+      --pink: #ec4899;
+      --pink-soft: #d946ef;
     }
 
     * {
@@ -61,7 +63,7 @@
       justify-content: center;
       opacity: 1;
       visibility: visible;
-      transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+      transition: opacity 0.3s ease-out, visibility 0.3s ease-out; /* MODIFIED: Removed delay */
     }
     #loadingOverlay.hidden {
       opacity: 0;
@@ -72,30 +74,26 @@
       color: var(--text);
       font-weight: 700;
       letter-spacing: 0.05em;
+      /* MODIFIED: animation: text-hit 1.5s ease-in-out forwards; */
     }
     #loadingOverlay p {
       font-size: 0.9rem;
       color: var(--muted);
       margin-top: 10px;
     }
-
-    #skateboarder {
-      width: 100px;
-      margin-bottom: -15px;
-      animation: spin-jump 1.2s ease-in-out infinite;
+    
+    #skate-animation {
+      /* MODIFIED: width: 150px; */
+      /* MODIFIED: animation: roll-and-flip 1.5s ease-in-out forwards; */
+      display: none; /* MODIFIED: Hide animation */
     }
-
-    @keyframes spin-jump {
-      0% {
-        transform: translateY(0) rotate(0deg);
-      }
-      50% {
-        transform: translateY(-30px) rotate(360deg);
-      }
-      100% {
-        transform: translateY(0) rotate(360deg);
-      }
+    #skater-board {
+      width: 100%;
     }
+    
+    /* MODIFIED: Removed @keyframes roll-and-flip */
+    
+    /* MODIFIED: Removed @keyframes text-hit */
     /* --- END: LOADING SCREEN --- */
 
 
@@ -213,11 +211,7 @@
       color: #020617;
       box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
     }
-
-    #locateBtn {
-      white-space: nowrap;
-    }
-
+    
     /* MAP */
     #map {
       flex-grow: 1; /* Map fills all remaining vertical space */
@@ -229,6 +223,11 @@
     .leaflet-container {
       width: 100%;
       height: 100%;
+    }
+
+    /* --- MODIFIED: Set map brightness --- */
+    .leaflet-tile-container {
+      filter: brightness(55%);
     }
     
     .leaflet-right {
@@ -253,7 +252,6 @@
       border-radius: 16px 16px 0 0;
       box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.8);
       transform: translateY(calc(100% - 50px)); /* collapsed (50px handle) */
-      transition: transform 0.25s ease-out;
       z-index: 1500;
       visibility: hidden;
     }
@@ -262,6 +260,10 @@
       transform: translateY(0);
       visibility: visible;
     }
+    
+    #sheet.animating {
+      transition: transform 0.25s ease-out;
+    }
 
     #sheetHandle {
       padding: 6px 14px 10px;
@@ -269,6 +271,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      touch-action: none; /* Allow us to control touch */
     }
 
     #sheetHandleLeft {
@@ -309,12 +312,21 @@
       overflow-y: auto;
       font-size: 11px;
     }
+    
+    /* --- NEW: Allow menu to pop out of scrolling area --- */
+    #sheetBody.overflow-visible {
+      overflow-y: visible;
+    }
 
     /* Swipe container */
     .spotSwipe {
       position: relative;
-      overflow: hidden;
       margin-bottom: 7px;
+    }
+    
+    /* --- NEW: Allow menu to pop out --- */
+    .spotSwipe.overflow-visible {
+      overflow: visible;
     }
 
     .spotDeleteBtn {
@@ -356,6 +368,9 @@
       z-index: 1;
       transition: transform 0.2s ease-out;
       transform: translateX(0);
+      background-size: cover;
+      background-position: center;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); /* Readability */
     }
 
     .spotSwipe.open .spotItem {
@@ -370,17 +385,27 @@
     }
 
     .spotName {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 13px; /* MODIFIED: Slightly larger */
+      font-weight: 700; /* MODIFIED: Bolder */
+      color: #FFFFFF; /* MODIFIED: Brighter */
     }
     
     .spotRating {
       font-size: 14px;
       letter-spacing: 1px;
     }
+    /* MODIFIED: Added glowing star styles */
     .spotRating .star-filled {
       color: var(--star);
+      text-shadow: 0 0 8px var(--star);
+      transition: text-shadow 0.2s;
     }
+    .spotRating.rating-1 .star-filled { text-shadow: 0 0 6px var(--star); }
+    .spotRating.rating-2 .star-filled { text-shadow: 0 0 9px var(--star); }
+    .spotRating.rating-3 .star-filled { text-shadow: 0 0 12px var(--star); }
+    .spotRating.rating-4 .star-filled { text-shadow: 0 0 16px var(--star); }
+    .spotRating.rating-5 .star-filled { text-shadow: 0 0 20px rgba(250, 204, 21, 0.8); }
+    
     .spotRating .star-empty {
       color: var(--star-empty);
     }
@@ -393,16 +418,148 @@
 
     .spotTime {
       font-size: 10px;
-      color: var(--muted);
+      color: #c7d2fe; /* MODIFIED: Brighter */
+      position: absolute;
+      top: 8px;
+      right: 9px; /* MODIFIED: Adjusted position */
     }
-
-    .photoActions {
-      margin-top: 4px;
+    
+    .spotCardActions {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      z-index: 2; 
       display: flex;
       gap: 6px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
+      align-items: center;
     }
+    .spotCardActions.open {
+      z-index: 3; 
+    }
+    
+    /* MODIFIED: Added .spotCardEditBtn */
+    .spotCardActionsBtn, .spotCardFavoriteBtn, .spotCardStreetViewBtn, .spotCardEditBtn { /* Grouped styles */
+      background: rgba(59, 130, 246, 0.5);
+      border: 1px solid var(--blue);
+      color: var(--text);
+      padding: 4px;
+      border-radius: 999px;
+      box-shadow: none;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* MODIFIED: Added .spotCardEditBtn svg */
+    .spotCardActionsBtn svg, .spotCardFavoriteBtn svg, .spotCardStreetViewBtn svg, .spotCardEditBtn svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2;
+      transition: all 0.2s ease-out;
+    }
+    .spotCardActions.open .spotCardActionsBtn svg {
+      transform: rotate(45deg);
+    }
+    
+    /* --- NEW: Favorite Button Styles --- */
+    .spotCardFavoriteBtn {
+      background: rgba(236, 72, 153, 0.2);
+      border: 1px solid rgba(236, 72, 153, 0.6);
+      color: rgba(236, 72, 153, 0.8);
+    }
+    .spotCardFavoriteBtn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+    }
+    .spotCardFavoriteBtn.favorited {
+      background: var(--pink);
+      border-color: var(--pink);
+      color: var(--text);
+    }
+    .spotCardFavoriteBtn.favorited svg {
+      fill: var(--text);
+    }
+    @keyframes heart-glow {
+      0%, 100% { box-shadow: 0 0 10px rgba(236, 72, 153, 0.5); }
+      50% { box-shadow: 0 0 20px 8px rgba(236, 72, 153, 0.8); }
+    }
+    .spotCardFavoriteBtn.glow {
+      animation: heart-glow 1s ease-in-out;
+    }
+    /* --- END: Favorite Button Styles --- */
+
+    /* MODIFIED: Edit button made green */
+    .spotCardEditBtn {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(34, 197, 94, 0.6);
+      color: rgba(34, 197, 94, 0.8);
+    }
+    .spotCardEditBtn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+    }
+    
+    /* MODIFIED: Street view button icon size */
+    .spotCardStreetViewBtn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    
+    .spotCardMenu {
+      position: absolute;
+      bottom: 36px; /* Above the + button */
+      right: 0;
+      background: var(--panel);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      width: 130px; /* --- WIDENED --- */
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease-out;
+      z-index: 3; 
+    }
+    .spotCardActions.open .spotCardMenu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    .spotCardMenuBtn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+      padding: 8px 10px;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      width: 100%;
+    }
+    .spotCardMenuBtn:not(:last-child) {
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .spotCardMenuBtn:active {
+      background: rgba(148, 163, 184, 0.1);
+      transform: none;
+      opacity: 1;
+    }
+    .spotCardMenuBtn svg {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2;
+    }
+    .spotCardMenuBtn.green svg { color: var(--accent); }
+    .spotCardMenuBtn.blue svg { color: var(--blue); }
+    
 
     .addPhotoBtn,
     .removePhotoBtn,
@@ -452,7 +609,7 @@
 
     .spotCoords {
       font-size: 10px;
-      color: var(--muted);
+      color: #c7d2fe; /* MODIFIED: Brighter */
       margin-top: 3px;
     }
 
@@ -462,6 +619,16 @@
       flex-wrap: wrap;
       gap: 4px;
       align-items: center;
+      padding-bottom: 24px; /* Space for the + button */
+      /* --- NEW: Make stars and tags split --- */
+      justify-content: space-between;
+    }
+    
+    .chip-tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: flex-end; /* Align tags to the right */
     }
 
     .chip {
@@ -474,6 +641,7 @@
       background: rgba(110, 231, 183, 0.18); /* Default: teal */
       border: 1px solid rgba(110, 231, 183, 0.5);
       color: #a7f3d0;
+      font-weight: 600; /* MODIFIED: Bolder */
     }
     
     .chip.tag-stairs { background: rgba(147, 197, 253, 0.18); border-color: rgba(147, 197, 253, 0.5); color: #bfdbfe; }
@@ -515,6 +683,11 @@
       justify-content: center;
       z-index: 2000;
       backdrop-filter: blur(10px);
+    }
+    
+    /* MODIFIED: z-index fix for profile modal */
+    #editProfileModalBackdrop {
+      z-index: 5001;
     }
 
     .modal-backdrop.open {
@@ -567,8 +740,24 @@
       font-size: 13px;
       outline: none;
     }
+    
+    /* MODIFIED: Added textarea styles */
+    .modalBody textarea {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: #020617;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 60px;
+    }
 
-    .modalBody input::placeholder {
+    .modalBody input::placeholder,
+    .modalBody textarea::placeholder {
       color: #6b7280;
     }
     
@@ -711,25 +900,20 @@
       box-shadow: 0 0 15px 5px rgba(34, 197, 94, 0.7);
     }
     
-    #hubAdd svg {
-      stroke-width: 1.5;
-      background: var(--text);
-      color: #020617;
-      border-radius: 8px;
-      width: 28px;
-      height: 28px;
+    #hubLocate svg {
+      stroke-width: 2; /* Make crosshair bolder */
     }
     
-    #hubAdd:active svg {
+    #hubLocate:active svg {
       transform: none;
       opacity: 0.9;
     }
 
     #saveIndicator {
       position: absolute;
-      bottom: 60px; /* Just above the 60px hub bar */
-      left: 75%; /* Align with the 4th icon (spots) */
-      transform: translateX(-50%) translateY(10px); /* Center on icon, start hidden */
+      bottom: 60px; 
+      left: 70%; /* Position over 4th icon */
+      transform: translateX(-50%) translateY(10px);
       color: var(--accent);
       font-size: 11px;
       font-weight: 700;
@@ -880,10 +1064,13 @@
       display: inline-block;
     }
 
-    /* --- NEW: PAGE OVERLAY STYLES --- */
+    /* --- PAGE OVERLAY STYLES --- */
     .page-overlay {
       position: fixed;
-      inset: 0;
+      top: 0; /* Start at the top */
+      left: 0;
+      width: 100%;
+      height: 100svh; /* Full viewport height */
       background: var(--bg);
       z-index: 5000;
       transform: translateY(100%);
@@ -901,9 +1088,9 @@
       background: transparent;
       border: none;
       box-shadow: none;
-      color: var(--muted);
+      color: var(--danger); /* MODIFIED: Red */
       font-size: 30px;
-      font-weight: 200;
+      font-weight: 400; /* MODIFIED: Bolder */
       padding: 5px;
       line-height: 1;
     }
@@ -911,28 +1098,132 @@
       flex-grow: 1;
       display: flex;
       flex-direction: column;
+      padding: 0; /* MODIFIED: Removed default padding */
+      overflow-y: auto;
+    }
+    
+    /* --- MODIFIED: Profile Page --- */
+    #profilePage .page-content {
+      align-items: stretch; /* MODIFIED */
+      justify-content: flex-start; /* MODIFIED */
+    }
+    
+    .profile-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--panel);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      flex-shrink: 0;
+    }
+    
+    /* MODIFIED: Red close button for profile */
+    #profilePage .page-close-btn-inline {
+      color: var(--danger);
+      font-size: 28px;
+      font-weight: 300;
+      padding: 0 5px;
+    }
+    
+    .profile-username {
+      font-size: 16px;
+      font-weight: 600;
+      flex-grow: 1;
+      text-align: center;
+      color: var(--text);
+      /* MODIFIED: Offset by button width */
+      margin-left: -24px; 
+      margin-right: 24px;
+    }
+    
+    .profile-header {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      gap: 16px;
+    }
+    
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #020617;
+      border: 1px solid var(--muted);
+      display: flex;
       align-items: center;
       justify-content: center;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .profile-pic svg {
+      width: 32px;
+      height: 32px;
+      stroke-width: 1.5;
+    }
+    
+    .profile-stats {
+      display: flex;
+      flex-grow: 1;
+      justify-content: space-around;
+      align-items: center;
       text-align: center;
     }
     
-    /* Profile Page */
-    @keyframes text-glow {
-      0%, 100% { text-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
-      50% { text-shadow: 0 0 25px rgba(34, 197, 94, 1); }
-    }
-    .profile-title {
-      font-size: 24px;
+    .stat-item .stat-count {
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text);
-      animation: text-glow 2s ease-in-out infinite;
-      padding: 0 20px;
     }
-    .profile-subtitle {
+    
+    .stat-item .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    .profile-bio {
+      padding: 0 16px 16px;
+      text-align: left;
+    }
+    .profile-bio p {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.4;
+      /* MODIFIED: Allow white space to wrap in bio */
+      white-space: pre-wrap; 
+      word-break: break-word;
+    }
+    .profile-bio .bio-username {
+      font-weight: 600;
+    }
+    .profile-bio .bio-text {
+      color: var(--muted);
+      font-style: italic;
+    }
+    
+    .edit-profile-btn {
+      background: #020617;
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      width: calc(100% - 32px);
+      margin: 0 16px 16px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+    
+    .profile-content-placeholder {
+      padding: 40px 20px;
+      text-align: center;
       color: var(--muted);
       font-size: 14px;
-      margin-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.4);
+      flex-grow: 1;
     }
-
+    /* --- END: Profile Page --- */
+    
     /* Search Page */
     .search-header {
       display: flex;
@@ -946,9 +1237,9 @@
       background: transparent;
       border: none;
       box-shadow: none;
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 600;
+      color: var(--danger); /* MODIFIED: Red */
+      font-size: 15px; /* MODIFIED: Clearer */
+      font-weight: 700; /* MODIFIED: Clearer */
       padding: 8px 0;
     }
     .search-bar-container {
@@ -985,19 +1276,135 @@
       font-size: 14px;
       text-align: center;
     }
+    #searchResults {
+      width: 100%;
+      text-align: left;
+    }
+    .search-result-item {
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .search-result-item:active {
+      background: rgba(148, 163, 184, 0.2);
+    }
+    .search-result-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .search-result-coords {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    
+    /* Settings Page */
+    #settingsPage .page-content {
+      justify-content: flex-start;
+      padding: 20px;
+      gap: 15px;
+    }
+    .settings-group {
+      width: 100%;
+      text-align: left;
+    }
+    .settings-group label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .setting-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .setting-btn.blue {
+      background: linear-gradient(135deg, var(--blue), var(--blue-soft));
+      color: #fff;
+    }
+    .setting-btn.red {
+      background: linear-gradient(135deg, var(--danger), var(--danger-soft));
+      color: #fff;
+    }
+    .setting-toggle {
+      display: flex;
+      gap: 10px;
+    }
+    .setting-toggle .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      background: #020617;
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      text-align: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .setting-toggle .toggle-btn.active {
+      background: var(--accent);
+      color: #020617;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    
+    /* --- NEW: Achievements Page Styles --- */
+    #achievementsPage .page-content {
+      padding: 20px;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+    .achievement-item {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .achievement-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    .achievement-details .title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .achievement-details .description {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .achievement-item.locked {
+      opacity: 0.5;
+    }
+    .achievement-item.locked .title {
+      color: var(--muted);
+    }
 
   </style>
 </head>
 <body>
 
   <div id="loadingOverlay">
-    <svg id="skateboarder" viewBox="-10 -15 120 60">
-        <line x1="50" y1="20" x2="50" y2="0" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <circle cx="50" cy="-5" r="5" fill="var(--text)"/> <line x1="50" y1="20" x2="35" y2="30" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <line x1="50" y1="20" x2="65" y2="30" stroke="var(--text)" stroke-width="5" stroke-linecap="round"/> <g id="board">
-            <rect x="10" y="30" width="80" height="8" rx="4" fill="var(--accent)"/>
-            <circle cx="25" cy="40" r="5" fill="#fff"/>
-            <circle cx="75" cy="40" r="5" fill="#fff"/>
-        </g>
-    </svg>
+    <div id="skate-animation">
+      <svg id="skater-board" viewBox="0 0 100 40">
+        <rect x="10" y="10" width="80" height="10" rx="5" fill="var(--accent)"/>
+        <circle cx="25" cy="25" r="5" fill="var(--text)"/>
+        <circle cx="75" cy="25" r="5" fill="var(--text)"/>
+      </svg>
+    </div>
     <h1>Skate Maps</h1>
     <p>created by Dillan Swanepoel</p>
   </div>
@@ -1020,6 +1427,14 @@
       </li>
       <li id="menuTeam">
         <span>Team</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+      </li>
+      <li id="menuGameOfSkate">
+        <span>Game Of Skate</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+      </li>
+      <li id="menuAchievements">
+        <span>Achievements</span>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
       </li>
     </ul>
@@ -1049,8 +1464,7 @@
           <button class="modeBtn" data-mode="street">Map</button>
           <button class="modeBtn active" data-mode="sat">Sat</button>
         </div>
-        <button id="locateBtn">Locate me</button>
-      </div>
+        </div>
     </div>
   </header>
 
@@ -1157,11 +1571,71 @@
     </div>
   </div>
   
+  <div id="editProfileModalBackdrop" class="modal-backdrop">
+    <div id="editProfileModal" class="modal-container">
+      <div class="modalTitle">Edit Profile</div>
+      <div class="modalSubtitle">
+        Update your username and bio.
+      </div>
+      <div class="modalBody">
+        <label for="profileUsernameInput">Username</label>
+        <input
+          id="profileUsernameInput"
+          type="text"
+          placeholder="Your username"
+        />
+        <label for="profileBioInput">Bio</label>
+        <textarea
+          id="profileBioInput"
+          placeholder="Tell us about yourself..."
+        ></textarea>
+      </div>
+      <div class="modalActions">
+        <button id="editProfileCancelBtn" class="modalBtn cancel">Cancel</button>
+        <button id="editProfileSaveBtn" class="modalBtn save">Save</button>
+      </div>
+    </div>
+  </div>
+  
   <div id="profilePage" class="page-overlay">
-    <button class="page-close-btn" id="profilePageCloseBtn">×</button>
+    <div class="profile-page-header">
+      <button class="page-close-btn-inline" id="profilePageCloseBtn" style="font-size: 28px; font-weight: 300; padding: 0 5px;">×</button>
+      <div class="profile-username" id="profileUsernameDisplay">skater_username</div>
+    </div>
     <div class="page-content">
-      <h1 class="profile-title">Welcome to the Skaters Profile</h1>
-      <p class="profile-subtitle">coming soon</p>
+      <div class="profile-header">
+        <div class="profile-pic">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <div class="profile-stats">
+          <div class="stat-item">
+            <div class="stat-count" id="profileSpotsCount">0</div>
+            <div class="stat-label">Spots</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-count" id="profileFavCount">0</div>
+            <div class="stat-label">Favorites</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-count" id="profileLevel">1</div>
+            <div class="stat-label">Level</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="profile-bio">
+        <p><span class="bio-username" id="profileBioUsername">skater_username</span><br>
+        <span class="bio-text" id="profileBioText">Tap "Edit Profile" to add your bio!</span>
+        </p>
+      </div>
+      
+      <button class="edit-profile-btn" id="editProfileBtn">Edit Profile</button>
+      
+      <div class="profile-content-placeholder">
+        Your saved spot photos will appear here soon.
+      </div>
     </div>
   </div>
 
@@ -1174,9 +1648,79 @@
       </div>
     </div>
     <div class="page-content search-content">
-      <p class="search-placeholder-text">
-        Here you can search skate spots for now, more will come out soon.
+      <p class="search-placeholder-text" id="searchPlaceholder">
+        Search for spots by name.
       </p>
+      <div id="searchResults"></div>
+    </div>
+  </div>
+  
+  <div id="achievementsPage" class="page-overlay">
+    <div class="search-header"> 
+      <button class="page-close-btn-inline" id="achievementsPageCloseBtn">← Back</button>
+    </div>
+    <div class="page-content">
+      <h1 class="profile-title" style="animation: none; margin-bottom: 20px; padding: 0;">Achievements</h1>
+      
+      <div class="achievement-item">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-details">
+          <div class="title">Spot Collector</div>
+          <div class="description">Save 10 skate spots.</div>
+        </div>
+      </div>
+      
+      <div class="achievement-item">
+        <div class="achievement-icon">❤️</div>
+        <div class="achievement-details">
+          <div class="title">True Fan</div>
+          <div class="description">Favorite 5 spots.</div>
+        </div>
+      </div>
+      
+      <div class="achievement-item locked">
+        <div class="achievement-icon">📸</div>
+        <div class="achievement-details">
+          <div class="title">Photographer</div>
+          <div class="description">Add a photo to a spot. (Coming Soon)</div>
+        </div>
+      </div>
+      
+      <div class="achievement-item locked">
+        <div class="achievement-icon">🗺️</div>
+        <div class="achievement-details">
+          <div class="title">Explorer</div>
+          <div class="description">Visit a spot in a different city. (Coming Soon)</div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+  
+  <div id="settingsPage" class="page-overlay">
+    <div class="search-header"> <button class="page-close-btn-inline" id="settingsPageCloseBtn">← Back</button>
+    </div>
+    <div class="page-content">
+      <h1 class="profile-title" style="animation: none; margin-bottom: 30px; padding: 0;">Settings</h1>
+      
+      <div class="settings-group">
+        <label>Default Map View</label>
+        <div class="setting-toggle">
+          <div class="toggle-btn" id="defaultMapStreet">Map</div>
+          <div class="toggle-btn" id="defaultMapSat">Satellite</div>
+        </div>
+      </div>
+      
+      <div class="settings-group">
+        <label>Account</label>
+        <div class="setting-btn blue" id="manageAccountBtn">Manage Account</div>
+      </div>
+      
+      <div class="settings-group" style="margin-top: auto;">
+        <label>Danger Zone</label>
+        <div class="setting-btn red" id="clearAllSpotsBtn">Clear All Spots</div>
+      </div>
+      
     </div>
   </div>
 
@@ -1191,14 +1735,15 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
       </svg>
     </button>
-    <button class="hubBtn" id="hubAdd">
+    <button class="hubBtn" id="hubLocate">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
       </svg>
     </button>
     <button class="hubBtn active" id="hubSpots">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15M4.5 16.5h15M4.5 13.5h15M4.5 10.5h15M4.5 7.5h15M4.5 4.5h15" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 8.598076, -3.232051)" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
       </svg>
     </button>
     <button class="hubBtn" id="hubProfile">
@@ -1225,13 +1770,17 @@
           if (loadingOverlay) {
             loadingOverlay.classList.add('hidden');
           }
-        }, 1500); // 1.5 seconds
+        }, 50); // MODIFIED: 50 milliseconds
       };
       
       document.getElementById("mapFallback").style.display = "none";
 
       const PERMANENT_STORAGE_KEY = "skateSpots_main"; 
       const DEVICE_KEY = "skateSpots_deviceId";
+      const MAP_VIEW_KEY = "skateMaps_defaultMap"; 
+      // MODIFIED: New keys for profile
+      const PROFILE_USERNAME_KEY = "skateProfile_username";
+      const PROFILE_BIO_KEY = "skateProfile_bio";
 
       let DEVICE_ID = localStorage.getItem(DEVICE_KEY);
       if (!DEVICE_ID) {
@@ -1251,14 +1800,15 @@
       const markersById = new Map();
 
       const locStatus = document.getElementById("locStatus");
-      const locateBtn = document.getElementById("locateBtn");
       const sheet = document.getElementById("sheet");
+      const sheetBody = document.getElementById("sheetBody");
       const sheetHandle = document.getElementById("sheetHandle");
       const spotsList = document.getElementById("spotsList");
       const spotsCount = document.getElementById("spotsCount");
       const photoInput = document.getElementById("photoInput");
 
       const spotModalBackdrop = document.getElementById("spotModalBackdrop");
+      const spotModal = document.getElementById("spotModal"); // MODIFIED: Get modal
       const spotNameInput = document.getElementById("spotNameInput");
       const spotCancelBtn = document.getElementById("spotCancelBtn");
       const spotSaveBtn = document.getElementById("spotSaveBtn");
@@ -1266,6 +1816,13 @@
       const removeSpotModalBackdrop = document.getElementById("removeSpotModalBackdrop");
       const removeSpotCancelBtn = document.getElementById("removeSpotCancelBtn");
       const removeSpotConfirmBtn = document.getElementById("removeSpotConfirmBtn");
+      
+      // MODIFIED: New Profile Modal
+      const editProfileModalBackdrop = document.getElementById("editProfileModalBackdrop");
+      const profileUsernameInput = document.getElementById("profileUsernameInput");
+      const profileBioInput = document.getElementById("profileBioInput");
+      const editProfileCancelBtn = document.getElementById("editProfileCancelBtn");
+      const editProfileSaveBtn = document.getElementById("editProfileSaveBtn");
 
       const modeButtons = document.querySelectorAll(".modeBtn");
       
@@ -1279,6 +1836,9 @@
       const menuDashboard = document.getElementById("menuDashboard");
       const menuFavorites = document.getElementById("menuFavorites");
       const menuTeam = document.getElementById("menuTeam");
+      // MODIFIED: New menu items
+      const menuGameOfSkate = document.getElementById("menuGameOfSkate");
+      const menuAchievements = document.getElementById("menuAchievements");
       const menuSettingsBtn = document.getElementById("menuSettingsBtn");
       const menuCloseBtn = document.getElementById("menuCloseBtn");
       
@@ -1288,14 +1848,37 @@
       const ratingStars = spotRatingInput.querySelectorAll(".star");
       const spotTagsInput = document.getElementById("spotTagsInput");
       
-      // --- NEW: Page elements ---
       const profilePage = document.getElementById("profilePage");
       const profilePageCloseBtn = document.getElementById("profilePageCloseBtn");
+      const editProfileBtn = document.getElementById("editProfileBtn"); // MODIFIED
+      const profileSpotsCount = document.getElementById("profileSpotsCount"); // MODIFIED
+      const profileFavCount = document.getElementById("profileFavCount"); // MODIFIED
+      const profileLevel = document.getElementById("profileLevel"); // MODIFIED
+      const profileUsernameDisplay = document.getElementById("profileUsernameDisplay"); // MODIFIED
+      const profileBioUsername = document.getElementById("profileBioUsername"); // MODIFIED
+      const profileBioText = document.getElementById("profileBioText"); // MODIFIED
+      
+      // MODIFIED: New Achievements Page
+      const achievementsPage = document.getElementById("achievementsPage");
+      const achievementsPageCloseBtn = document.getElementById("achievementsPageCloseBtn");
+      
       const searchPage = document.getElementById("searchPage");
       const searchPageCloseBtn = document.getElementById("searchPageCloseBtn");
+      const searchInput = document.getElementById("searchInput");
+      const searchResults = document.getElementById("searchResults");
+      const searchPlaceholder = document.getElementById("searchPlaceholder");
       const filterBtn = document.getElementById("filterBtn");
       
+      const settingsPage = document.getElementById("settingsPage");
+      const settingsPageCloseBtn = document.getElementById("settingsPageCloseBtn");
+      const defaultMapStreet = document.getElementById("defaultMapStreet");
+      const defaultMapSat = document.getElementById("defaultMapSat");
+      const manageAccountBtn = document.getElementById("manageAccountBtn");
+      const clearAllSpotsBtn = document.getElementById("clearAllSpotsBtn");
+      
       let currentRating = 0; 
+      let activeMiniMenu = null; 
+      let currentEditingSpotId = null; // MODIFIED: For editing
 
       let map;
       let streetLayer;
@@ -1337,18 +1920,49 @@
       
       menuCloseBtn.addEventListener('click', toggleMenu);
       menuDashboard.addEventListener('click', () => showToast("Coming soon!"));
-      menuFavorites.addEventListener('click', () => showToast("Coming soon!"));
+      menuFavorites.addEventListener('click', () => {
+        const favoriteSpots = spots.filter(s => s.isFavorite);
+        searchPage.classList.add("open");
+        searchInput.value = ""; 
+        searchInput.style.display = 'none';
+        filterBtn.style.display = 'none'; 
+        searchPageCloseBtn.textContent = "← Back to Menu";
+        
+        document.querySelector('.search-header').style.justifyContent = 'flex-start'; // Align back button
+        
+        renderSearchResults(favoriteSpots, "You have no favorite spots yet.");
+        toggleMenu(); 
+      });
       menuTeam.addEventListener('click', () => showToast("Coming soon!"));
-      menuSettingsBtn.addEventListener('click', () => showToast("Coming soon!"));
+      
+      // MODIFIED: New menu item listeners
+      menuGameOfSkate.addEventListener('click', () => showToast("Game Of Skate coming soon!"));
+      menuAchievements.addEventListener('click', () => {
+        achievementsPage.classList.add("open");
+        toggleMenu(); 
+      });
+      achievementsPageCloseBtn.addEventListener('click', () => {
+        achievementsPage.classList.remove("open");
+      });
+      
+      menuSettingsBtn.addEventListener('click', () => {
+        settingsPage.classList.add("open");
+        toggleMenu(); 
+      });
+      settingsPageCloseBtn.addEventListener('click', () => {
+        settingsPage.classList.remove("open");
+      });
 
 
       // MAP INIT
-      map = L.map("map", { zoomControl: false }).setView([0, 0], 2);
+      // MODIFIED: Added maxZoom: 22
+      map = L.map("map", { zoomControl: false, maxZoom: 22 }).setView([0, 0], 2);
 
       streetLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           maxZoom: 19,
+          maxNativeZoom: 19, // MODIFIED: Added maxNativeZoom
           attribution: "© OpenStreetMap contributors"
         }
       );
@@ -1357,12 +1971,22 @@
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         {
           maxZoom: 19,
+          maxNativeZoom: 19, // MODIFIED: Added maxNativeZoom
           attribution:
             "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
         }
       );
 
-      satelliteLayer.addTo(map);
+      const defaultMapView = localStorage.getItem(MAP_VIEW_KEY) || 'sat';
+      if (defaultMapView === 'sat') {
+        satelliteLayer.addTo(map);
+        document.querySelector('.modeBtn[data-mode="sat"]').classList.add('active');
+        document.querySelector('.modeBtn[data-mode="street"]').classList.remove('active');
+      } else {
+        streetLayer.addTo(map);
+        document.querySelector('.modeBtn[data-mode="street"]').classList.add('active');
+        document.querySelector('.modeBtn[data-mode="sat"]').classList.remove('active');
+      }
       
       L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -1394,13 +2018,15 @@
             ? { data: s.photoData.data, owner: s.photoData.owner || null }
             : null,
           rating: s.rating, 
-          tags: s.tags 
+          tags: s.tags,
+          isFavorite: s.isFavorite // --- NEW: Save favorite status
         }));
         try {
           localStorage.setItem(PERMANENT_STORAGE_KEY, JSON.stringify(clean));
         } catch (e) {
           console.warn("Failed to save spots:", e);
         }
+        calculateProfileStats(); // MODIFIED: Recalculate stats on save
       }
 
       function loadSpots() {
@@ -1451,7 +2077,7 @@
             }
           }
 
-          const marker = L.marker([s.lat, s.lng]).addTo(map);
+          const marker = L.marker([s.lat, s.lng], { icon: redIcon }).addTo(map);
           marker.bindPopup(`<b>${s.name}</b><br>Street spot`);
           const spotObj = {
             id: s.id,
@@ -1462,7 +2088,8 @@
             marker,
             photoData: normalizedPd,
             rating: s.rating || 0, 
-            tags: s.tags || [] 
+            tags: s.tags || [],
+            isFavorite: s.isFavorite || false // --- NEW: Load favorite status
           };
           spots.push(spotObj);
           markersById.set(spotObj.id, marker);
@@ -1473,6 +2100,8 @@
         }
 
         renderSpotsList();
+        calculateProfileStats(); // MODIFIED
+        loadProfile(); // MODIFIED
       }
 
       // UI RENDER
@@ -1526,7 +2155,7 @@
         }
 
         card.addEventListener("touchstart", (e) => {
-          if (e.target.closest('button, .addPhotoBtn, .removePhotoBtn, .streetViewBtn, .addVideoBtn')) {
+          if (e.target.closest('button, .addPhotoBtn, .removePhotoBtn, .streetViewBtn, .addVideoBtn, .spotCardActionsBtn, .spotCardFavoriteBtn, .spotCardStreetViewBtn, .spotCardEditBtn')) { // MODIFIED: Added .spotCardEditBtn
             startX = null;
             return;
           }
@@ -1620,8 +2249,12 @@
       
       let resolveRemoveConfirmation; 
 
-      function openRemoveSpotModal() {
+      function openRemoveSpotModal(title, subtitle) {
         return new Promise((resolve) => {
+          const modal = document.getElementById('removeSpotModal');
+          modal.querySelector('.modalTitle').textContent = title || 'Remove skate spot?';
+          modal.querySelector('.modalSubtitle').textContent = subtitle || 'Are you sure you want to remove this skate spot? This action cannot be undone.';
+          
           resolveRemoveConfirmation = resolve;
           removeSpotModalBackdrop.classList.add("open");
         });
@@ -1647,14 +2280,19 @@
       });
       
 
-      function renderSpotsList() {
+      function renderSpotsList(spotsToRender = spots) {
         spotsList.innerHTML = "";
 
-        spots.forEach((spot, idx) => {
-          const hasPhoto = !!(spot.photoData && spot.photoData.data);
-          const canRemovePhoto =
-            hasPhoto && spot.photoData.owner === DEVICE_ID;
+        if (spotsToRender.length === 0) {
+          spotsList.innerHTML = `<p style="font-size: 12px; color: var(--muted); text-align: center; padding: 20px;">No spots found.</p>`;
+          spotsCount.textContent = "0 spots";
+          return;
+        }
 
+        spotsToRender.forEach((spot, idx) => {
+          const hasPhoto = !!(spot.photoData && spot.photoData.data);
+          // MODIFIED: Removed canRemovePhoto logic
+          
           const wrapper = document.createElement("div");
           wrapper.className = "spotSwipe";
 
@@ -1667,65 +2305,140 @@
           card.className = "spotItem";
           card.dataset.id = spot.id;
 
+          if (hasPhoto) {
+            // --- UPDATED: Darker gradient for readability ---
+            card.style.background = `linear-gradient(145deg, rgba(15, 23, 42, 0.75), rgba(30, 64, 175, 0.6)), url(${spot.photoData.data})`;
+            card.style.backgroundSize = "cover";
+            card.style.backgroundPosition = "center";
+          }
+
+          // MODIFIED: Removed photo delete button, added Edit button
           card.innerHTML = `
             <div class="spotItemHeader">
               <div class="spotName">${idx + 1}. ${spot.name}</div>
-              <div class="spotRating">${getStarsHTML(spot.rating)}</div>
+              <div class="spotTime">${formatTime(spot.createdAt)}</div>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-              <div class="spotCoords">
-                Lat: ${spot.lat.toFixed(5)}, Lng: ${spot.lng.toFixed(5)}
-              </div>
-              <div style="text-align:right;">
-                <div class="spotTime">${formatTime(spot.createdAt)}</div>
-                <div class="photoActions">
-                  <div class="addPhotoBtn" data-id="${spot.id}">
-                    <span class="plus">+</span>
-                    <span>Add photo</span>
-                  </div>
-                  <div class="addVideoBtn" data-id="${spot.id}">
-                    <span class="plus">+</span>
-                    <span>Add video</span>
-                  </div>
-                  ${
-                    canRemovePhoto
-                      ? `<div class="removePhotoBtn" data-id="${spot.id}">
-                           <span class="cross">×</span>
-                           <span>Remove photo</span>
-                         </div>`
-                      : ""
-                  }
-                  <div class="streetViewBtn" data-lat="${spot.lat}" data-lng="${spot.lng}">
-                    Street view
-                  </div>
-                </div>
-              </div>
+            
+            <div class="spotCoords">
+              Lat: ${spot.lat.toFixed(5)}, Lng: ${spot.lng.toFixed(5)}
             </div>
+            
             <div class="chipRow">
-              ${getTagsHTML(spot.tags)}
+              <div class="spotRating rating-${spot.rating || 0}">${getStarsHTML(spot.rating)}</div>
+              <div class="chip-tags-container">
+                ${getTagsHTML(spot.tags)}
+              </div>
             </div>
-            ${
-              hasPhoto
-                ? `<div class="spotThumbWrap"><img src="${spot.photoData.data}" class="spotThumb" alt="Spot photo"></div>`
-                : ""
-            }
+            
+            <div class="spotCardActions">
+              <button class="spotCardFavoriteBtn ${spot.isFavorite ? 'favorited' : ''}" data-id="${spot.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                </svg>
+              </button>
+              
+              <button class="spotCardEditBtn" data-id="${spot.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+              </button>
+
+              <button class="spotCardStreetViewBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </button>
+              
+              <div class="spotCardMenu">
+                <button class="spotCardMenuBtn green addPhotoBtn" data-id="${spot.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                  <span>Add Photo</span>
+                </button>
+                <button class="spotCardMenuBtn blue addVideoBtn" data-id="${spot.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 13.5 5.25h-9a2.25 2.25 0 0 0-2.25 2.25v9A2.25 2.25 0 0 0 4.5 18.75Z" /></svg>
+                  <span>Add Video</span>
+                </button>
+              </div>
+              <button class="spotCardActionsBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              </button>
+            </div>
           `;
 
           // card tap -> fly to marker (ignore button taps)
           card.addEventListener("click", (e) => {
             if (
-              e.target.closest(".addPhotoBtn") ||
-              e.target.closest(".removePhotoBtn") ||
-              e.target.closest(".streetViewBtn") ||
-              e.target.closest(".addVideoBtn") ||
+              e.target.closest(".spotCardActionsBtn") ||
+              e.target.closest(".spotCardMenuBtn") ||
+              // e.target.closest(".spotCardPhotoDeleteBtn") || // MODIFIED: Removed
               e.target.closest(".spotDeleteBtn") ||
+              e.target.closest(".spotCardFavoriteBtn") ||
+              e.target.closest(".spotCardStreetViewBtn") || 
+              e.target.closest(".spotCardEditBtn") || // MODIFIED
               wrapper.classList.contains("open")
             ) {
               return;
             }
             map.setView([spot.lat, spot.lng], 18);
+            sheet.classList.remove("open");
             if (spot.marker) spot.marker.openPopup();
           });
+
+          // --- MODIFIED: Added Street View Button Listener ---
+          const streetViewBtn = card.querySelector(".spotCardStreetViewBtn");
+          if (streetViewBtn) {
+            streetViewBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              showToast("Street View coming soon!");
+            });
+          }
+          
+          const actionsWrapper = card.querySelector(".spotCardActions");
+          const actionsBtn = card.querySelector(".spotCardActionsBtn");
+          actionsBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            const spotSwipe = actionsBtn.closest('.spotSwipe');
+            
+            if (activeMiniMenu && activeMiniMenu !== actionsWrapper) {
+              activeMiniMenu.classList.remove("open");
+              activeMiniMenu.closest('.spotSwipe').style.overflow = ''; 
+              sheetBody.style.overflowY = 'auto';
+            }
+            
+            actionsWrapper.classList.toggle("open");
+            
+            if (actionsWrapper.classList.contains("open")) {
+              activeMiniMenu = actionsWrapper;
+              spotSwipe.style.overflow = 'visible'; 
+              sheetBody.style.overflowY = 'visible';
+            } else {
+              activeMiniMenu = null;
+              spotSwipe.style.overflow = ''; 
+              sheetBody.style.overflowY = 'auto';
+            }
+          });
+          
+          // --- NEW: Favorite button listener ---
+          const favoriteBtn = card.querySelector(".spotCardFavoriteBtn");
+          favoriteBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            spot.isFavorite = !spot.isFavorite;
+            saveSpots(); // This will also update stats
+            favoriteBtn.classList.toggle("favorited");
+            if (spot.isFavorite) {
+              favoriteBtn.classList.add("glow");
+              setTimeout(() => favoriteBtn.classList.remove("glow"), 1000); // 1 sec glow
+            }
+          });
+
+          // --- MODIFIED: Edit button listener ---
+          const editBtn = card.querySelector(".spotCardEditBtn");
+          if (editBtn) {
+            editBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              openEditModal(spot);
+            });
+          }
 
           // photo add
           const addPhotoBtn = card.querySelector(".addPhotoBtn");
@@ -1745,38 +2458,13 @@
             });
           }
 
-          // photo remove
-          const removePhotoBtn = card.querySelector(".removePhotoBtn");
-          if (removePhotoBtn) {
-            removePhotoBtn.addEventListener("click", async (ev) => { 
-              ev.stopPropagation();
-              const target = spots.find((s) => s.id === spot.id);
-              if (!target || !target.photoData) return;
-              if (target.photoData.owner !== DEVICE_ID) {
-                await openRemoveSpotModal(); 
-                return;
-              }
-              const confirmed = await openRemoveSpotModal();
-              if (!confirmed) return;
-              
-              target.photoData = null;
-              saveSpots();
-              renderSpotsList();
-            });
-          }
-
-          // Street view
-          const streetBtn = card.querySelector(".streetViewBtn");
-          streetBtn.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            showToast("Street View coming soon!");
-          });
+          // MODIFIED: Removed photo remove button listener
 
           // delete spot
           deleteBtn.addEventListener("click", async (ev) => { 
             ev.stopPropagation();
             
-            const confirmed = await openRemoveSpotModal();
+            const confirmed = await openRemoveSpotModal("Remove Spot?", "Are you sure you want to remove this skate spot? This action cannot be undone.");
             if (confirmed) {
               removeSpotById(spot.id);
             }
@@ -1790,8 +2478,45 @@
         });
 
         spotsCount.textContent =
-          spots.length === 1 ? "1 spot" : `${spots.length} spots`;
+          spotsToRender.length === 1 ? "1 spot" : `${spotsToRender.length} spots`;
       }
+      
+      // --- NEW: Render Search Results ---
+      function renderSearchResults(results, noResultsText = "No spots found.") {
+        searchResults.innerHTML = "";
+        if (results.length === 0) {
+          searchPlaceholder.textContent = noResultsText;
+          searchPlaceholder.style.display = "block";
+          return;
+        }
+        
+        searchPlaceholder.style.display = "none";
+        
+        results.forEach(spot => {
+          const item = document.createElement('div');
+          item.className = 'search-result-item';
+          item.innerHTML = `
+            <div class="search-result-name">${spot.name}</div>
+            <div class="search-result-coords">Lat: ${spot.lat.toFixed(4)}, Lng: ${spot.lng.toFixed(4)}</div>
+          `;
+          item.addEventListener('click', () => {
+            searchPage.classList.remove("open"); // Close search
+            map.setView([spot.lat, spot.lng], 18);
+            if (spot.marker) spot.marker.openPopup();
+          });
+          searchResults.appendChild(item);
+        });
+      }
+      
+      // --- NEW: Global click listener to close mini-menu ---
+      document.addEventListener('click', (e) => {
+        if (activeMiniMenu && !activeMiniMenu.contains(e.target)) {
+          activeMiniMenu.classList.remove('open');
+          activeMiniMenu.closest('.spotSwipe').style.overflow = '';
+          sheetBody.style.overflowY = 'auto';
+          activeMiniMenu = null;
+        }
+      });
 
       // PHOTO HANDLING
       photoInput.addEventListener("change", (e) => {
@@ -1835,54 +2560,100 @@
         spotTagsInput.querySelectorAll('input[type="checkbox"]').forEach(cb => {
           cb.checked = false;
         });
+        
+        // MODIFIED: Reset modal titles/buttons
+        spotModal.querySelector(".modalTitle").textContent = "Save skate spot";
+        spotSaveBtn.textContent = "Save spot";
+        currentEditingSpotId = null;
+      }
+      
+      // MODIFIED: Function to open modal for editing
+      function openEditModal(spot) {
+        resetModalInputs(); // Clear first
+        
+        currentEditingSpotId = spot.id;
+        spotNameInput.value = spot.name;
+        
+        currentRating = spot.rating;
+        updateStars(spot.rating);
+        
+        spot.tags.forEach(tag => {
+          const checkbox = spotTagsInput.querySelector(`input[value="${tag}"]`);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+        
+        spotModal.querySelector(".modalTitle").textContent = "Edit skate spot";
+        spotSaveBtn.textContent = "Save Changes";
+        
+        spotModalBackdrop.classList.add("open");
+        setTimeout(() => spotNameInput.focus(), 10);
       }
 
       function openSpotModal(latlng) {
         pendingLatLng = latlng;
-        resetModalInputs(); // Reset all inputs
+        resetModalInputs(); 
         spotModalBackdrop.classList.add("open");
         setTimeout(() => spotNameInput.focus(), 10);
       }
 
       function closeSpotModal() {
         pendingLatLng = null;
+        currentEditingSpotId = null; // MODIFIED
         spotModalBackdrop.classList.remove("open");
+        resetModalInputs(); // MODIFIED: Reset on close
       }
 
       spotCancelBtn.addEventListener("click", () => {
         closeSpotModal();
       });
 
+      // MODIFIED: spotSaveBtn listener
       spotSaveBtn.addEventListener("click", () => {
         const name = spotNameInput.value.trim();
-        if (!pendingLatLng || !name) {
-          return;
-        }
+        if (!name) return; // Name is always required
         
         const rating = currentRating;
         const selectedTags = [];
         spotTagsInput.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
           selectedTags.push(cb.value);
         });
-        
-        addSpot(pendingLatLng, name, rating, selectedTags); 
 
-        if (pendingMarker) {
-          map.removeLayer(pendingMarker);
-          pendingMarker = null;
+        if (currentEditingSpotId) {
+          // --- We are EDITING an existing spot ---
+          const spotToEdit = spots.find(s => s.id === currentEditingSpotId);
+          if (spotToEdit) {
+            spotToEdit.name = name;
+            spotToEdit.rating = rating;
+            spotToEdit.tags = selectedTags;
+            
+            // Update marker popup
+            if(spotToEdit.marker) {
+              spotToEdit.marker.setPopupContent(`<b>${name}</b><br>Street spot`);
+            }
+          }
+        } else if (pendingLatLng) {
+          // --- We are ADDING a new spot ---
+          addSpot(pendingLatLng, name, rating, selectedTags); 
+          if (pendingMarker) {
+            map.removeLayer(pendingMarker);
+            pendingMarker = null;
+          }
+          
+          // Show "Saved!" animation
+          const hubSpotsIcon = document.getElementById("hubSpots");
+          hubSpotsIcon.classList.add("saved-highlight");
+          saveIndicator.classList.add("show");
+          setTimeout(() => {
+              hubSpotsIcon.classList.remove("saved-highlight");
+              saveIndicator.classList.remove("show");
+          }, 2000);
         }
-        
+
+        saveSpots();
+        renderSpotsList();
         closeSpotModal();
-        
-        const hubSpotsIcon = document.getElementById("hubSpots");
-        
-        hubSpotsIcon.classList.add("saved-highlight");
-        saveIndicator.classList.add("show");
-        
-        setTimeout(() => {
-            hubSpotsIcon.classList.remove("saved-highlight");
-            saveIndicator.classList.remove("show");
-        }, 2000);
       });
 
       spotNameInput.addEventListener("keydown", (e) => {
@@ -1899,7 +2670,7 @@
           "_" +
           Math.random().toString(16).slice(2, 8);
 
-        const marker = L.marker(latlng).addTo(map); 
+        const marker = L.marker(latlng, { icon: redIcon }).addTo(map); 
         marker.bindPopup(`<b>${name}</b><br>Street spot`);
 
         const spot = {
@@ -1911,14 +2682,14 @@
           marker,
           photoData: null,
           rating: rating, 
-          tags: tags 
+          tags: tags,
+          isFavorite: false // Default to not favorite
         };
 
         spots.push(spot);
         markersById.set(id, marker);
 
-        renderSpotsList();
-        saveSpots();
+        // No save/render here, it's handled by the save button
       }
 
       // --- PRESS-AND-HOLD LOGIC ---
@@ -2002,7 +2773,7 @@
 
             userCircle = L.circle(latlng, acc).addTo(map);
 
-            map.setView(latlng, 16);
+            map.setView(latlng, 15); // MODIFIED: Zoomed out to 15
             locStatus.textContent = "Location found.";
           },
           (err) => {
@@ -2021,16 +2792,93 @@
         );
       }
 
-      locateBtn.addEventListener("click", () => requestLocation(true));
+      // --- UPDATED: Smooth swipe down for sheet ---
+      let sheetStartY = null;
+      let sheetCurrentY = 0;
+      let isSwipingSheet = false;
+      let sheetStartTransform = 0;
+      let isSwipingFromSheetBody = false; // MODIFIED: Added this flag
 
-      sheetHandle.addEventListener("click", () => {
-        sheet.classList.toggle("open");
+      sheetHandle.addEventListener("touchstart", (e) => {
+        isSwipingFromSheetBody = false; // MODIFIED: It's from the handle
+        sheetStartY = e.touches[0].clientY;
+        sheet.classList.remove('animating'); // Remove animation for 1:1 drag
+        
+        const style = window.getComputedStyle(sheet);
+        const matrix = new DOMMatrixReadOnly(style.transform);
+        sheetStartTransform = matrix.m42; // Get the current Y transform
       });
+      
+      // MODIFIED: Added sheetBody touchstart listener
+      sheetBody.addEventListener("touchstart", (e) => {
+        // Only trigger swipe-down-to-close if scrolled to the top
+        if (sheetBody.scrollTop === 0) {
+          isSwipingFromSheetBody = true; // MODIFIED: It's from the body
+          sheetStartY = e.touches[0].clientY;
+          sheet.classList.remove('animating');
+          const style = window.getComputedStyle(sheet);
+          const matrix = new DOMMatrixReadOnly(style.transform);
+          sheetStartTransform = matrix.m42; // Get the current Y transform
+        }
+      });
+      
+      document.body.addEventListener("touchmove", (e) => {
+        if (sheetStartY === null) return;
+        
+        isSwipingSheet = true;
+        const currentY = e.touches[0].clientY;
+        let dy = currentY - sheetStartY;
+
+        if (sheet.classList.contains("open")) {
+          // If open, only allow swiping down
+          if (dy < 0) dy = 0; 
+          sheet.style.transform = `translateY(${dy}px)`;
+        } else {
+          // If closed, only allow swiping up
+          if (dy > 0) dy = 0;
+          sheet.style.transform = `translateY(calc(100% - 50px + ${dy}px))`;
+        }
+      });
+      
+      document.body.addEventListener("touchend", (e) => {
+        if (sheetStartY === null) return;
+        
+        const currentY = e.changedTouches[0].clientY;
+        const dy = currentY - sheetStartY;
+        
+        sheet.classList.add('animating'); 
+        sheet.style.transform = ""; // Clear inline style
+        
+        if (isSwipingSheet) { // Only toggle if it was a real swipe
+          if (sheet.classList.contains("open")) {
+            if (dy > 100) { // If swiped down enough
+              sheet.classList.remove("open");
+            }
+          } else {
+            if (dy < -100) { // If swiped up enough
+              sheet.classList.add("open");
+            }
+          }
+        } else {
+          // MODIFIED: It was a tap, not a swipe. Only toggle if tap was on handle.
+          if (!isSwipingFromSheetBody) { 
+            sheet.classList.toggle("open");
+          }
+        }
+
+        // Clean up
+        setTimeout(() => sheet.classList.remove('animating'), 250); 
+        sheetStartY = null;
+        isSwipingSheet = false;
+        isSwipingFromSheetBody = false; // MODIFIED: Reset flag
+      });
+      // --- END: Sheet swipe down ---
+      
       
       // HUB BAR CONTROLS
       const hubHome = document.getElementById("hubHome");
       const hubSearch = document.getElementById("hubSearch");
-      const hubAdd = document.getElementById("hubAdd");
+      const hubLocate = document.getElementById("hubLocate"); // Renamed
       const hubSpots = document.getElementById("hubSpots");
       const hubProfile = document.getElementById("hubProfile");
       const allHubBtns = document.querySelectorAll(".hubBtn");
@@ -2039,9 +2887,14 @@
         showToast("Homepage coming soon!");
       });
       
-      // --- UPDATED: Open search page ---
       hubSearch.addEventListener("click", () => {
         searchPage.classList.add("open");
+        searchInput.style.display = 'block';
+        filterBtn.style.display = 'block';
+        searchPageCloseBtn.textContent = "← Back";
+        document.querySelector('.search-header').style.justifyContent = '';
+        renderSearchResults(spots, "Search for spots by name.");
+        searchInput.focus();
       });
       searchPageCloseBtn.addEventListener("click", () => {
         searchPage.classList.remove("open");
@@ -2050,25 +2903,139 @@
         showToast("Filters coming soon!");
       });
       
-      hubAdd.addEventListener("click", () => {
-        showToast("Press and hold the map to add a spot!");
+      searchInput.addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase();
+        const results = spots.filter(spot => 
+          spot.name.toLowerCase().includes(term)
+        );
+        renderSearchResults(results, "No spots found for that name.");
       });
       
-      // --- UPDATED: Open profile page ---
+      hubLocate.addEventListener("click", () => { // Changed from hubAdd
+        requestLocation(true);
+      });
+      
+      // MODIFIED: hubProfile listener
       hubProfile.addEventListener("click", () => {
+        calculateProfileStats(); // Recalculate just in case
         profilePage.classList.add("open");
       });
       profilePageCloseBtn.addEventListener("click", () => {
         profilePage.classList.remove("open");
       });
       
+      // MODIFIED: Edit Profile Button
+      editProfileBtn.addEventListener("click", () => {
+        // Load current values into modal
+        profileUsernameInput.value = localStorage.getItem(PROFILE_USERNAME_KEY) || "skater_username";
+        profileBioInput.value = localStorage.getItem(PROFILE_BIO_KEY) || "";
+        editProfileModalBackdrop.classList.add("open");
+      });
+      editProfileCancelBtn.addEventListener("click", () => {
+        editProfileModalBackdrop.classList.remove("open");
+      });
+      editProfileSaveBtn.addEventListener("click", () => {
+        const newUsername = profileUsernameInput.value.trim();
+        const newBio = profileBioInput.value.trim();
+        
+        localStorage.setItem(PROFILE_USERNAME_KEY, newUsername);
+        localStorage.setItem(PROFILE_BIO_KEY, newBio);
+        
+        loadProfile(); // Update the UI
+        editProfileModalBackdrop.classList.remove("open");
+        showToast("Profile saved!");
+      });
+      
       hubSpots.addEventListener("click", () => {
         sheet.classList.toggle("open");
       });
+      
+      
+      // --- Settings Page Logic ---
+      function updateMapToggleButtons(view) {
+        if (view === 'sat') {
+          defaultMapSat.classList.add('active');
+          defaultMapStreet.classList.remove('active');
+        } else {
+          defaultMapStreet.classList.add('active');
+          defaultMapSat.classList.remove('active');
+        }
+      }
+      
+      updateMapToggleButtons(localStorage.getItem(MAP_VIEW_KEY) || 'sat');
+      
+      defaultMapStreet.addEventListener('click', () => {
+        localStorage.setItem(MAP_VIEW_KEY, 'street');
+        updateMapToggleButtons('street');
+        showToast('Default map view set to Street');
+      });
+      
+      defaultMapSat.addEventListener('click', () => {
+        localStorage.setItem(MAP_VIEW_KEY, 'sat');
+        updateMapToggleButtons('sat');
+        showToast('Default map view set to Satellite');
+      });
+      
+      manageAccountBtn.addEventListener('click', () => {
+        showToast("Account management coming soon!");
+      });
+      
+      clearAllSpotsBtn.addEventListener('click', async () => {
+        const confirmed = await openRemoveSpotModal("Clear All Spots?", "Are you sure? This will delete all saved spots from this device. This cannot be undone.");
+        if (confirmed) {
+          spots.length = 0; // Empty the array
+          markersById.forEach(marker => map.removeLayer(marker));
+          markersById.clear();
+          saveSpots(); // Save the empty array
+          renderSpotsList();
+          showToast("All spots have been cleared.");
+        }
+      });
+      
+      // --- MODIFIED: New Profile & Stats Functions ---
+      function calculateProfileStats() {
+        const spotsCount = spots.length;
+        const favCount = spots.filter(s => s.isFavorite).length;
+        
+        // XP System: 10xp per spot, 50xp per favorite
+        const totalXp = (spotsCount * 10) + (favCount * 50);
+        
+        // Leveling Curve
+        let level = 1;
+        if (totalXp >= 1000) level = 5;
+        else if (totalXp >= 600) level = 4;
+        else if (totalXp >= 300) level = 3;
+        else if (totalXp >= 100) level = 2;
+        
+        // Update UI
+        profileSpotsCount.textContent = spotsCount;
+        profileFavCount.textContent = favCount;
+        profileLevel.textContent = level;
+      }
+      
+      function loadProfile() {
+        const username = localStorage.getItem(PROFILE_USERNAME_KEY) || "skater_username";
+        const bio = localStorage.getItem(PROFILE_BIO_KEY);
+        
+        profileUsernameDisplay.textContent = username;
+        profileBioUsername.textContent = username;
+        
+        if (bio) {
+          profileBioText.textContent = bio;
+          profileBioText.style.fontStyle = "normal";
+          profileBioText.style.color = "var(--text)";
+        } else {
+          profileBioText.textContent = 'Tap "Edit Profile" to add your bio!';
+          profileBioText.style.fontStyle = "italic";
+          profileBioText.style.color = "var(--muted)";
+        }
+      }
 
       // INIT
       loadSpots();
-      renderSpotsList();
+      // renderSpotsList(); // Already called by loadSpots
+      // calculateProfileStats(); // Already called by loadSpots
+      // loadProfile(); // Already called by loadSpots
       requestLocation(false);
     }
   </script>
