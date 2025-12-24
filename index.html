@@ -13,8 +13,11 @@
       --text:#eaeaea;
 
       --sheetRadius:22px;
-      --sheetPeek:64px;     /* visible bar when collapsed */
-      --sheetH:70vh;        /* open height (set via JS too) */
+      --sheetPeek:64px;
+      --sheetH:70vh;
+
+      --menuW:75vw;
+      --blue:#00bfff;
     }
 
     *{ box-sizing:border-box; margin:0; padding:0; }
@@ -26,6 +29,87 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
       overflow:hidden;
     }
+
+    /* =========================
+       Menu icon (top-left)
+       ========================= */
+    .menu-btn{
+      position:fixed;
+      top:10px;
+      left:10px;
+      z-index:6;
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+    }
+    .menu-btn:active{ transform:scale(0.97); }
+    .menu-btn:hover{ background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.18); }
+
+    .menu-icon{
+      width:20px;
+      height:14px;
+      position:relative;
+    }
+    .menu-icon span{
+      position:absolute;
+      left:0;
+      right:0;
+      height:2px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.92);
+      opacity:0.9;
+    }
+    .menu-icon span:nth-child(1){ top:0; }
+    .menu-icon span:nth-child(2){ top:6px; opacity:0.75; }
+    .menu-icon span:nth-child(3){ top:12px; }
+
+    /* =========================
+       Stats icon (top-right)
+       ========================= */
+    .stats-btn{
+      position:fixed;
+      top:10px;
+      right:10px;
+      z-index:6;
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+    }
+    .stats-btn:active{ transform:scale(0.97); }
+    .stats-btn:hover{ background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.18); }
+
+    .stats-icon{
+      width:22px;
+      height:18px;
+      display:flex;
+      align-items:flex-end;
+      gap:3px;
+    }
+    .bar{
+      width:5px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.90);
+      opacity:0.9;
+    }
+    .bar:nth-child(1){ height:7px; opacity:0.65; }
+    .bar:nth-child(2){ height:12px; opacity:0.80; }
+    .bar:nth-child(3){ height:16px; opacity:0.95; }
 
     /* =========================
        Hourly rate (top center)
@@ -131,7 +215,7 @@
       font-variant-numeric: tabular-nums;
       font-weight:900;
       letter-spacing:0.4px;
-      font-size:33px; /* 1.5x timer */
+      font-size:33px;
       color:rgba(0,255,76,0.95);
       text-shadow:
         0 0 18px rgba(0,255,76,0.22),
@@ -191,6 +275,7 @@
       opacity:0;
       pointer-events:none;
       transition:opacity 220ms ease;
+      z-index:10;
     }
     .overlay.show{
       opacity:1;
@@ -203,8 +288,8 @@
       right:0;
       bottom:0;
       height:var(--sheetH);
-      border-top-left-radius:var(--sheetRadius);
-      border-top-right-radius:var(--sheetRadius);
+      border-top-left-radius:22px;
+      border-top-right-radius:22px;
       background:rgba(18,18,18,0.92);
       backdrop-filter: blur(14px);
       box-shadow: 0 -14px 34px rgba(0,0,0,0.55);
@@ -215,6 +300,7 @@
       flex-direction:column;
       overflow:hidden;
       touch-action:none;
+      z-index:11;
     }
     .sheet.no-transition{ transition:none; }
 
@@ -248,7 +334,6 @@
       margin-top:12px;
     }
 
-    /* NEW: total row under the header bar */
     .sheet-total-row{
       display:flex;
       align-items:center;
@@ -265,7 +350,7 @@
       font-size:12px;
       font-weight:900;
       letter-spacing:0.6px;
-      color:rgba(255,255,255,0.92); /* "TOTAL" in white */
+      color:rgba(255,255,255,0.92);
       white-space:nowrap;
     }
 
@@ -380,7 +465,64 @@
     }
 
     /* =========================
-       Stop modal
+       Coming soon page
+       ========================= */
+    .page{
+      position:fixed;
+      inset:0;
+      background:#000;
+      z-index:40;
+      display:none;
+      flex-direction:column;
+    }
+    .page.show{ display:flex; }
+
+    .page-top{
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      backdrop-filter: blur(12px);
+    }
+    .back-btn{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      color:rgba(255,255,255,0.9);
+      font-weight:900;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease;
+    }
+    .back-btn:active{ transform:scale(0.97); }
+
+    .page-title{
+      font-weight:900;
+      letter-spacing:0.8px;
+      font-size:14px;
+      opacity:0.92;
+    }
+    .page-body{
+      flex:1;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      text-align:center;
+    }
+    .coming{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:1px;
+      opacity:0.9;
+    }
+
+    /* =========================
+       Stop modal + settings modal
        ========================= */
     .modal-overlay{
       position:fixed;
@@ -460,7 +602,7 @@
       gap:8px;
     }
 
-    input, textarea{
+    input, textarea, select{
       width:100%;
       border-radius:14px;
       border:1px solid rgba(255,255,255,0.12);
@@ -475,11 +617,6 @@
       resize:none;
       min-height:96px;
       line-height:1.35;
-    }
-
-    input:focus, textarea:focus{
-      border-color: rgba(0,255,76,0.35);
-      box-shadow: 0 0 0 3px rgba(0,255,76,0.10);
     }
 
     .modal-actions{
@@ -511,18 +648,175 @@
       color:#001a08;
       box-shadow: 0 0 18px rgba(0,255,76,0.18);
     }
-    .btn-save:disabled{
-      opacity:0.45;
-      cursor:not-allowed;
-      box-shadow:none;
+
+    /* =========================
+       Menu overlay + drawer
+       ========================= */
+    .menu-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.65);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 220ms ease;
+      z-index:30;
+    }
+    .menu-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .menu-drawer{
+      position:fixed;
+      top:0;
+      left:0;
+      height:100vh;
+      width:var(--menuW);
+      max-width:520px;
+      background:rgba(16,16,16,0.96);
+      backdrop-filter: blur(14px);
+      border-right:1px solid rgba(255,255,255,0.10);
+      box-shadow: 18px 0 50px rgba(0,0,0,0.55);
+      transform: translateX(-102%);
+      transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+      z-index:31;
+      display:flex;
+      flex-direction:column;
+      padding:16px;
+      gap:12px;
+    }
+    .menu-drawer.open{ transform: translateX(0); }
+
+    .menu-title{
+      font-weight:900;
+      letter-spacing:0.8px;
+      font-size:14px;
+      opacity:0.92;
+      padding:10px 10px 6px;
+    }
+
+    .menu-item{
+      width:100%;
+      border-radius:16px;
+      padding:14px 12px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      color:rgba(255,255,255,0.92);
+      font-weight:900;
+      letter-spacing:0.6px;
+      text-align:left;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+    }
+    .menu-item:active{ transform:scale(0.99); }
+    .menu-item:hover{ background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.16); }
+
+    .menu-spacer{ flex:1; }
+
+    .settings-btn{
+      width:100%;
+      border:none;
+      height:52px;
+      border-radius:16px;
+      cursor:pointer;
+      font-weight:900;
+      letter-spacing:0.6px;
+      color:#001018;
+      background:rgba(0,191,255,0.92);
+      box-shadow: 0 0 18px rgba(0,191,255,0.18);
+      transition: transform 120ms ease, box-shadow 180ms ease, background 180ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-btn:active{ transform:scale(0.99); }
+
+    /* =========================
+       Settings toggle
+       ========================= */
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:10px 0 2px;
+    }
+    .row-left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+    }
+    .row-title{
+      font-weight:900;
+      letter-spacing:0.6px;
+      font-size:12px;
+      opacity:0.9;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .row-sub{
+      font-size:12px;
+      opacity:0.65;
+      line-height:1.25;
+    }
+
+    .toggle{
+      width:54px;
+      height:30px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.08);
+      position:relative;
+      cursor:pointer;
+      flex:0 0 auto;
+      transition: background 180ms ease, border-color 180ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .toggle::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      left:3px;
+      transform:translateY(-50%);
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      background:rgba(255,255,255,0.88);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+      transition: left 180ms ease, background 180ms ease;
+    }
+    .toggle.on{
+      background: rgba(0,191,255,0.28);
+      border-color: rgba(0,191,255,0.45);
+    }
+    .toggle.on::after{
+      left:27px;
+      background: rgba(0,191,255,0.95);
     }
 
     @media (prefers-reduced-motion: reduce){
-      .timer-wrap, .earnings-float, .action-btn, .overlay, .sheet, .modal-overlay{ transition:none; }
+      .timer-wrap, .earnings-float, .action-btn, .overlay, .sheet,
+      .modal-overlay, .menu-overlay, .menu-drawer, .page { transition:none; }
+      .toggle::after{ transition:none; }
     }
   </style>
 </head>
 <body>
+  <!-- Menu icon -->
+  <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu">
+    <div class="menu-icon" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </button>
+
+  <!-- Stats icon -->
+  <button class="stats-btn" id="statsBtn" type="button" aria-label="Open stats">
+    <div class="stats-icon" aria-hidden="true">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+  </button>
+
   <!-- Hourly Rate (top center) -->
   <div class="top-rate" aria-label="Hourly rate">
     <label for="rateInput">HOURLY RATE</label>
@@ -541,6 +835,18 @@
     </div>
   </div>
 
+  <!-- Menu overlay + drawer -->
+  <div class="menu-overlay" id="menuOverlay" aria-hidden="true"></div>
+  <aside class="menu-drawer" id="menuDrawer" aria-label="Menu">
+    <div class="menu-title">MENU</div>
+
+    <button class="menu-item" id="goalsBtn" type="button">GOALS</button>
+
+    <div class="menu-spacer"></div>
+
+    <button class="settings-btn" id="settingsBtn" type="button">SETTINGS</button>
+  </aside>
+
   <!-- History overlay -->
   <div class="overlay" id="overlay" aria-hidden="true"></div>
 
@@ -551,7 +857,6 @@
       <div class="sheet-title">HISTORY</div>
     </div>
 
-    <!-- NEW total row directly under header bar -->
     <div class="sheet-total-row">
       <div class="sheet-total-label">TOTAL</div>
       <div class="sheet-total-value" id="historyTotal">$0.00</div>
@@ -577,8 +882,8 @@
 
       <div class="modal-body">
         <div class="field">
-          <label for="tagInput">TAG (REQUIRED)</label>
-          <input id="tagInput" type="text" placeholder="e.g. Warehouse Shift, Delivery Run" maxlength="40" />
+          <label for="tagInput">TAG (OPTIONAL)</label>
+          <input id="tagInput" type="text" placeholder='Leave empty to save as "No Tag"' maxlength="40" />
         </div>
 
         <div class="field">
@@ -589,10 +894,70 @@
 
       <div class="modal-actions">
         <button class="btn btn-ghost" id="cancelBtn" type="button">CANCEL</button>
-        <button class="btn btn-save" id="saveBtn" type="button" disabled>SAVE</button>
+        <button class="btn btn-save" id="saveBtn" type="button">SAVE</button>
       </div>
     </div>
   </div>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay" id="settingsOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2>Settings</h2>
+          <div class="modal-sub">Currency + tag popup behavior</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="currencySelect">CURRENCY</label>
+          <select id="currencySelect">
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="£">£ GBP</option>
+            <option value="R">R ZAR</option>
+            <option value="¥">¥ JPY</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div class="row-left">
+            <div class="row-title">ADD TAG POPUP</div>
+            <div class="row-sub">Turn off to auto-save stops as “No Tag” with no popup.</div>
+          </div>
+          <div class="toggle" id="popupToggle" role="switch" aria-checked="true" tabindex="0"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-save" id="settingsCloseBtn" type="button">DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coming soon pages -->
+  <section class="page" id="statsPage" aria-label="Stats (coming soon)">
+    <div class="page-top">
+      <button class="back-btn" id="statsBack" type="button" aria-label="Back">←</button>
+      <div class="page-title">STATS</div>
+      <div style="width:44px;height:44px;"></div>
+    </div>
+    <div class="page-body">
+      <div class="coming">COMING SOON</div>
+    </div>
+  </section>
+
+  <section class="page" id="goalsPage" aria-label="Goals (coming soon)">
+    <div class="page-top">
+      <button class="back-btn" id="goalsBack" type="button" aria-label="Back">←</button>
+      <div class="page-title">GOALS</div>
+      <div style="width:44px;height:44px;"></div>
+    </div>
+    <div class="page-body">
+      <div class="coming">COMING SOON</div>
+    </div>
+  </section>
 
   <script>
     // ==========================
@@ -600,21 +965,18 @@
     // ==========================
     const LS_KEY = "timer_history_v3";
     const RATE_KEY = "hourly_rate_v1";
+    const CURR_KEY = "currency_symbol_v1";
+    const POPUP_KEY = "tag_popup_enabled_v1";
 
     function loadHistory(){
       try{
         const raw = localStorage.getItem(LS_KEY);
         const parsed = raw ? JSON.parse(raw) : [];
         return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
+      } catch { return []; }
     }
-
     function saveHistory(){
-      try{
-        localStorage.setItem(LS_KEY, JSON.stringify(history));
-      } catch {}
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(history)); } catch {}
     }
 
     function loadRate(){
@@ -622,26 +984,161 @@
         const raw = localStorage.getItem(RATE_KEY);
         const n = raw === null ? NaN : Number(raw);
         return Number.isFinite(n) ? n : 0;
-      } catch {
-        return 0;
-      }
+      } catch { return 0; }
     }
-
     function saveRate(val){
       try{ localStorage.setItem(RATE_KEY, String(val)); } catch {}
     }
+
+    function loadCurrency(){
+      try{
+        const raw = localStorage.getItem(CURR_KEY);
+        return (typeof raw === "string" && raw.length) ? raw : "$";
+      } catch { return "$"; }
+    }
+    function saveCurrency(sym){
+      try{ localStorage.setItem(CURR_KEY, String(sym)); } catch {}
+    }
+
+    function loadPopupEnabled(){
+      try{
+        const raw = localStorage.getItem(POPUP_KEY);
+        if (raw === null) return true;
+        return raw === "true";
+      } catch { return true; }
+    }
+    function savePopupEnabled(v){
+      try{ localStorage.setItem(POPUP_KEY, v ? "true" : "false"); } catch {}
+    }
+
+    // ==========================
+    // Global settings state
+    // ==========================
+    let currencySymbol = loadCurrency();
+    let tagPopupEnabled = loadPopupEnabled();
 
     // ==========================
     // Money helpers
     // ==========================
     function formatMoney(n){
-      return `$${n.toFixed(2)}`;
+      return `${currencySymbol}${n.toFixed(2)}`;
     }
-
     function calcEarnings(ms, rate){
       const hours = ms / 3600000;
       return hours * rate;
     }
+
+    // ==========================
+    // Menu drawer behavior
+    // ==========================
+    const menuBtn = document.getElementById("menuBtn");
+    const menuOverlay = document.getElementById("menuOverlay");
+    const menuDrawer = document.getElementById("menuDrawer");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const goalsBtn = document.getElementById("goalsBtn");
+
+    function openMenu(){
+      menuDrawer.classList.add("open");
+      menuOverlay.classList.add("show");
+      menuOverlay.setAttribute("aria-hidden", "false");
+    }
+    function closeMenu(){
+      menuDrawer.classList.remove("open");
+      menuOverlay.classList.remove("show");
+      menuOverlay.setAttribute("aria-hidden", "true");
+    }
+    function toggleMenu(){
+      if (menuDrawer.classList.contains("open")) closeMenu();
+      else openMenu();
+    }
+    menuBtn.addEventListener("click", toggleMenu);
+    menuOverlay.addEventListener("click", closeMenu);
+
+    // ==========================
+    // Coming soon pages
+    // ==========================
+    const statsBtn = document.getElementById("statsBtn");
+    const statsPage = document.getElementById("statsPage");
+    const statsBack = document.getElementById("statsBack");
+
+    const goalsPage = document.getElementById("goalsPage");
+    const goalsBack = document.getElementById("goalsBack");
+
+    function openPage(pageEl){
+      closeMenu();
+      closeSettings();
+      closeSheet();
+      pageEl.classList.add("show");
+    }
+    function closePage(pageEl){
+      pageEl.classList.remove("show");
+    }
+
+    statsBtn.addEventListener("click", () => openPage(statsPage));
+    statsBack.addEventListener("click", () => closePage(statsPage));
+
+    goalsBtn.addEventListener("click", () => openPage(goalsPage));
+    goalsBack.addEventListener("click", () => closePage(goalsPage));
+
+    // ==========================
+    // Settings modal behavior
+    // ==========================
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const settingsCloseBtn = document.getElementById("settingsCloseBtn");
+    const currencySelect = document.getElementById("currencySelect");
+    const popupToggle = document.getElementById("popupToggle");
+
+    function applyToggleUI(){
+      popupToggle.classList.toggle("on", tagPopupEnabled);
+      popupToggle.setAttribute("aria-checked", tagPopupEnabled ? "true" : "false");
+    }
+
+    function openSettings(){
+      closeMenu();
+      currencySelect.value = currencySymbol;
+      applyToggleUI();
+
+      settingsOverlay.classList.add("show");
+      settingsOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeSettings(){
+      settingsOverlay.classList.remove("show");
+      settingsOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    settingsBtn.addEventListener("click", openSettings);
+    settingsCloseBtn.addEventListener("click", closeSettings);
+
+    settingsOverlay.addEventListener("click", (e) => {
+      if (e.target === settingsOverlay) closeSettings();
+    });
+
+    currencySelect.addEventListener("change", () => {
+      currencySymbol = currencySelect.value || "$";
+      saveCurrency(currencySymbol);
+
+      renderHistory();
+      if (running) {
+        const elapsed = performance.now() - startAtPerf;
+        earningsFloat.textContent = formatMoney(calcEarnings(elapsed, hourlyRate));
+      } else {
+        earningsFloat.textContent = formatMoney(0);
+      }
+    });
+
+    function togglePopupSetting(){
+      tagPopupEnabled = !tagPopupEnabled;
+      savePopupEnabled(tagPopupEnabled);
+      applyToggleUI();
+    }
+    popupToggle.addEventListener("click", togglePopupSetting);
+    popupToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        togglePopupSetting();
+      }
+    });
 
     // ==========================
     // Hourly rate + earnings
@@ -676,7 +1173,6 @@
     let rafId = null;
 
     // pending stop data
-    let pendingMs = 0;
     let pendingDisplay = "00:00.00";
     let pendingClockIn = "";
     let pendingClockOut = "";
@@ -710,10 +1206,7 @@
     function tick(now){
       const elapsed = now - startAtPerf;
       timerEl.textContent = formatTime(elapsed);
-
-      const earned = calcEarnings(elapsed, hourlyRate);
-      earningsFloat.textContent = formatMoney(earned);
-
+      earningsFloat.textContent = formatMoney(calcEarnings(elapsed, hourlyRate));
       rafId = requestAnimationFrame(tick);
     }
 
@@ -736,16 +1229,14 @@
 
     function hardStopTimerCapture(){
       const stopWall = new Date();
+      const elapsed = Math.max(0, performance.now() - startAtPerf);
 
-      pendingMs = Math.max(0, performance.now() - startAtPerf);
-      pendingDisplay = formatTime(pendingMs);
-
+      pendingDisplay = formatTime(elapsed);
       pendingClockIn = startAtWall ? formatClock(startAtWall) : "";
       pendingClockOut = formatClock(stopWall);
       pendingDate = startAtWall ? formatDateOnly(startAtWall) : formatDateOnly(stopWall);
-
       pendingWhenISO = stopWall.toISOString();
-      pendingAmount = calcEarnings(pendingMs, hourlyRate);
+      pendingAmount = calcEarnings(elapsed, hourlyRate);
 
       running = false;
       control.classList.remove("running");
@@ -756,16 +1247,42 @@
       rafId = null;
     }
 
+    function commitStopToHistory(tag, notes){
+      const safeTag = (tag && String(tag).trim()) ? String(tag).trim() : "No Tag";
+      const safeNotes = (notes && String(notes).trim()) ? String(notes) : "";
+
+      history.unshift({
+        duration: pendingDisplay,
+        clockIn: pendingClockIn,
+        clockOut: pendingClockOut,
+        date: pendingDate,
+        whenISO: pendingWhenISO,
+        tag: safeTag,
+        notes: safeNotes,
+        amount: pendingAmount
+      });
+
+      saveHistory();
+      renderHistory();
+      resetAfterStop();
+      // IMPORTANT: do NOT auto-open history sheet anymore
+    }
+
     btn.addEventListener("click", () => {
       if (!running) start();
       else {
         hardStopTimerCapture();
+
+        if (!tagPopupEnabled) {
+          commitStopToHistory("No Tag", "");
+          return;
+        }
         openSaveModal();
       }
     });
 
     // ==========================
-    // History total
+    // History total + render
     // ==========================
     function computeHistoryTotal(){
       let sum = 0;
@@ -780,9 +1297,6 @@
       historyTotalEl.textContent = formatMoney(computeHistoryTotal());
     }
 
-    // ==========================
-    // History rendering
-    // ==========================
     const historyList = document.getElementById("historyList");
     const emptyHint = document.getElementById("emptyHint");
 
@@ -806,7 +1320,7 @@
 
         const tagHeader = document.createElement("div");
         tagHeader.className = "tag-header";
-        tagHeader.textContent = (item.tag || "Untitled").trim();
+        tagHeader.textContent = (item.tag || "No Tag").trim() || "No Tag";
 
         const durationLine = document.createElement("div");
         durationLine.className = "duration-line";
@@ -933,8 +1447,7 @@
     function onPointerMove(e){
       if (!dragging) return;
       dragDy = e.clientY - dragStartY;
-      const nextY = startSheetY + dragDy;
-      setSheetY(nextY, true);
+      setSheetY(startSheetY + dragDy, true);
     }
 
     function onPointerUp(e){
@@ -942,11 +1455,9 @@
       dragging = false;
       sheet.classList.remove("no-transition");
 
-      if (sheetOpen && dragDy > 35){
-        closeSheet();
-      } else if (!sheetOpen && dragDy < -35){
-        openSheet();
-      } else {
+      if (sheetOpen && dragDy > 35) closeSheet();
+      else if (!sheetOpen && dragDy < -35) openSheet();
+      else {
         const midpoint = (closedY * 0.5);
         if (currentY < midpoint) openSheet();
         else closeSheet();
@@ -975,7 +1486,6 @@
       modalSub.textContent = `Duration: ${pendingDisplay}`;
       tagInput.value = "";
       notesInput.value = "";
-      saveBtn.disabled = true;
 
       modalOverlay.classList.add("show");
       modalOverlay.setAttribute("aria-hidden", "false");
@@ -991,7 +1501,6 @@
       timerEl.textContent = "00:00.00";
       earningsFloat.textContent = formatMoney(0);
 
-      pendingMs = 0;
       pendingDisplay = "00:00.00";
       pendingClockIn = "";
       pendingClockOut = "";
@@ -1000,10 +1509,6 @@
       pendingAmount = 0;
       startAtWall = null;
     }
-
-    tagInput.addEventListener("input", () => {
-      saveBtn.disabled = !(tagInput.value.trim().length > 0);
-    });
 
     cancelBtn.addEventListener("click", () => {
       closeSaveModal();
@@ -1018,37 +1523,29 @@
     });
 
     saveBtn.addEventListener("click", () => {
-      const tag = tagInput.value.trim();
-      if (!tag) return;
-
+      const tag = tagInput.value;
       const notes = notesInput.value || "";
-
-      history.unshift({
-        duration: pendingDisplay,
-        clockIn: pendingClockIn,
-        clockOut: pendingClockOut,
-        date: pendingDate,
-        whenISO: pendingWhenISO,
-        tag,
-        notes,
-        amount: pendingAmount
-      });
-
-      saveHistory();
-      renderHistory();
       closeSaveModal();
-      resetAfterStop();
-      openSheet();
+      commitStopToHistory(tag, notes);
     });
 
     // ==========================
     // Init
     // ==========================
-    measureSheet();
-    window.addEventListener("resize", measureSheet);
+    function init(){
+      earningsFloat.textContent = formatMoney(0);
+      renderHistory();
+      measureSheet();
+      closeSheet();
 
-    closeSheet();
-    renderHistory(); // also renders total
+      // reflect stored settings
+      currencySelect.value = currencySymbol;
+      popupToggle.classList.toggle("on", tagPopupEnabled);
+      popupToggle.setAttribute("aria-checked", tagPopupEnabled ? "true" : "false");
+    }
+
+    window.addEventListener("resize", measureSheet);
+    init();
   </script>
 </body>
 </html>
