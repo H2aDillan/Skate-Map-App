@@ -1,369 +1,853 @@
-<!DOCTYPE html>
+<!-- index.html (single file) -->
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Earnings Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --pixel-white: #ffffff;
-            --pixel-green: #33ff00;
-            --pixel-red: #ff0033;
-            --pixel-blue: #3498db;
-            --pixel-yellow: #f59e0b;
-            --widget-bg: #1a1a1a;
-            --sidebar-bg: #111111;
-            --widget-border: #444;
-            --modal-overlay: rgba(0, 0, 0, 0.9);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Timer + Tagged History</title>
+  <style>
+    :root{
+      --bg:#000;
+      --green:#00ff4c;
+      --red:#ff2a2a;
+      --text:#eaeaea;
 
-        body, html {
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            display: flex; flex-direction: column;
-            background-color: #000; font-family: 'Press Start 2P', cursive;
-            color: var(--pixel-white); overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
+      --sheetRadius:22px;
+      --sheetPeek:64px;     /* visible bar when collapsed */
+      --sheetH:70vh;        /* open height (set via JS too) */
+    }
 
-        /* --- MENU & SIDEBAR --- */
-        .menu-icon { 
-            position: absolute; top: 25px; left: 20px; 
-            width: 30px; height: 22px; display: flex; 
-            flex-direction: column; justify-content: space-between; 
-            cursor: pointer; z-index: 310; transition: opacity 0.2s; 
-        }
-        .menu-icon.hidden { opacity: 0; visibility: hidden; }
-        .menu-icon div { height: 4px; background-color: var(--pixel-white); width: 100%; }
+    *{ box-sizing:border-box; margin:0; padding:0; }
 
-        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 320; }
-        .sidebar { 
-            position: fixed; top: 0; left: 0; width: 70%; height: 100%; 
-            background-color: var(--sidebar-bg); border-right: 6px solid var(--widget-border); 
-            transform: translateX(-101%); transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
-            z-index: 330; display: flex; flex-direction: column; padding: 40px 25px; box-sizing: border-box; 
-        }
-        .sidebar.open { transform: translateX(0); }
-        .close-sidebar { position: absolute; top: 20px; right: 20px; font-size: 18px; cursor: pointer; color: white; }
-        .sidebar-item { font-size: 10px; padding: 15px 0; color: var(--pixel-white); cursor: pointer; list-style: none; text-transform: uppercase; }
-        .sidebar-item:hover { color: var(--pixel-green); }
-        .sidebar-footer { margin-top: auto; display: flex; justify-content: flex-end; }
-        .settings-btn { background-color: var(--pixel-blue); color: white; border: 4px solid #2980b9; padding: 10px 15px; font-family: 'Press Start 2P'; font-size: 8px; cursor: pointer; }
+    body{
+      min-height:100vh;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      overflow:hidden;
+    }
 
-        /* --- HOURLY RATE BOX (Restored Clean Look) --- */
-        .rate-container { 
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
-            display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 10; 
-        }
-        .rate-label { font-size: 8px; color: #888; }
-        .rate-input-wrapper { 
-            display: flex; align-items: center; background: #000; 
-            border: 3px solid var(--widget-border); padding: 5px 10px; 
-        }
-        .rate-symbol { font-size: 10px; color: var(--pixel-green); margin-right: 5px; }
-        .rate-input { 
-            background: transparent; border: none; color: white; 
-            font-family: 'Press Start 2P'; font-size: 10px; width: 60px; 
-            outline: none; text-align: center; 
-        }
+    /* Center control */
+    .stage{
+      position:fixed;
+      inset:0;
+      display:grid;
+      place-items:center;
+      padding-bottom: calc(var(--sheetPeek) + 18px);
+    }
 
-        /* --- MAIN APP AREA --- */
-        .main-app { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; padding-bottom: 80px; }
-        #earnings-display { font-size: 24px; color: var(--pixel-green); opacity: 0; transform: translateY(20px); transition: 0.3s; }
-        #timer-display { font-size: 28px; color: var(--pixel-white); opacity: 0; transform: translateY(20px); transition: 0.3s; }
-        .show-displays #earnings-display, .show-displays #timer-display { opacity: 1; transform: translateY(0); }
-        .btn { background-color: var(--pixel-green); color: black; padding: 15px 30px; font-size: 14px; font-family: 'Press Start 2P'; border: 4px solid #006600; cursor: pointer; }
-        .btn.stop { background-color: var(--pixel-red); border-color: #660000; color: white; }
+    .control{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
 
-        /* --- HISTORY DASHBOARD --- */
-        .widget-box { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 90%; max-width: 420px; background-color: var(--widget-bg); border: 4px solid var(--widget-border); border-bottom: none; transition: height 0.4s; height: 60px; z-index: 50; display: flex; flex-direction: column; overflow: hidden; }
-        .widget-box.open { height: 75%; }
-        .widget-header { height: 60px; display: flex; align-items: center; justify-content: center; padding: 0 15px; font-size: 10px; cursor: pointer; flex-shrink: 0; }
-        .widget-box.open .widget-header { justify-content: space-between; border-bottom: 2px solid #333; }
-        .dash-controls { display: none !important; gap: 10px; }
-        .widget-box.open .dash-controls { display: flex !important; }
-        .dash-btn { padding: 5px 8px; font-size: 8px; font-family: 'Press Start 2P'; cursor: pointer; color: white; border: 2px solid; }
-        #dash-total-display { display: none; font-size: 8px; color: var(--pixel-green); text-align: center; padding: 15px 0; background: #000; border-bottom: 2px solid #333; }
-        .widget-box.open #dash-total-display { display: block; }
-        .widget-content { display: none; flex: 1; overflow-y: auto; padding: 10px 15px; }
-        .widget-box.open .widget-content { display: block; }
-        .history-item { padding: 15px 0; border-bottom: 2px solid #333; display: flex; align-items: center; gap: 15px; }
-        .selected-del { background: rgba(255,0,0,0.15); border-left: 4px solid var(--pixel-red); padding-left: 10px; }
-        .selected-edit { background: rgba(245,158,11,0.2); border-left: 4px solid var(--pixel-yellow); padding-left: 10px; }
-        #confirm-delete-bar { display: none; background: var(--pixel-red); color: white; padding: 12px; text-align: center; font-size: 8px; cursor: pointer; border-top: 4px solid #660000; }
+    /* Timer text only (no frame/background/border) */
+    .timer-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
 
-        /* --- GOALS PAGE --- */
-        #goals-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 400; display: none; flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto; }
-        .goals-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 4px solid #222; padding-bottom: 15px; }
-        .goal-section-title { font-size: 9px; color: var(--pixel-blue); margin: 20px 0 15px 0; }
-        .goal-card { background: #111; border: 2px solid #222; padding: 15px; margin-bottom: 15px; }
-        .goal-info { display: flex; justify-content: space-between; font-size: 7px; margin-bottom: 10px; color: #666; }
-        .goal-input { background: #000; border: 2px solid #333; color: var(--pixel-green); font-family: 'Press Start 2P'; font-size: 9px; width: 80px; padding: 6px; text-align: center; outline: none; }
-        .progress-container { width: 100%; height: 14px; background: #000; border: 2px solid #333; overflow: hidden; position: relative; }
-        .progress-liquid { height: 100%; width: 0%; background: var(--pixel-green); transition: width 0.3s ease; box-shadow: 0 0 10px var(--pixel-green); }
+      /* hidden state */
+      max-width:0;
+      opacity:0;
+      overflow:hidden;
+      transform:translateX(14px);
+      transition:
+        max-width 360ms ease,
+        opacity 240ms ease,
+        transform 360ms ease;
+      will-change:max-width, transform, opacity;
+    }
 
-        /* --- MODALS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); display: none; justify-content: center; align-items: center; z-index: 600; }
-        .modal-box { background: #1a1a1a; border: 6px solid var(--pixel-white); padding: 25px; width: 85%; max-width: 380px; display: flex; flex-direction: column; gap: 12px; }
-        .modal-input { background: #000; border: 3px solid #333; color: white; padding: 10px; font-family: 'Press Start 2P'; font-size: 8px; outline: none; width: 100%; box-sizing: border-box; }
-    </style>
+    .timer{
+      font-variant-numeric: tabular-nums;
+      letter-spacing:0.6px;
+      font-size:22px;
+      font-weight:800;
+      white-space:nowrap;
+      user-select:none;
+      text-shadow: 0 0 18px rgba(255,255,255,0.12);
+    }
+
+    .action-btn{
+      width:180px;
+      height:64px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      letter-spacing:1px;
+      color:#001a08;
+      background:var(--green);
+      box-shadow:
+        0 0 18px rgba(0,255,76,0.28),
+        0 0 44px rgba(0,255,76,0.16);
+      transition:
+        background 220ms ease,
+        box-shadow 220ms ease,
+        transform 120ms ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .action-btn:active{ transform:scale(0.98); }
+
+    /* Running state */
+    .running .timer-wrap{
+      max-width:260px;
+      opacity:1;
+      transform:translateX(0);
+    }
+
+    .running .action-btn{
+      background:var(--red);
+      color:#250000;
+      box-shadow:
+        0 0 18px rgba(255,42,42,0.28),
+        0 0 44px rgba(255,42,42,0.16);
+    }
+
+    /* =========================
+       History sheet overlay
+       ========================= */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.6);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 220ms ease;
+    }
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* Bottom sheet */
+    .sheet{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:var(--sheetH);
+      border-top-left-radius:var(--sheetRadius);
+      border-top-right-radius:var(--sheetRadius);
+      background:rgba(18,18,18,0.92);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 -14px 34px rgba(0,0,0,0.55);
+      transform: translateY(var(--sheetY, calc(var(--sheetH) - var(--sheetPeek))));
+      transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+      will-change: transform;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      touch-action:none; /* dragging handled */
+    }
+    .sheet.no-transition{ transition:none; }
+
+    .sheet-header{
+      height:var(--sheetPeek);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .handle{
+      position:absolute;
+      top:10px;
+      width:68px;
+      height:6px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.22);
+    }
+
+    .sheet-title{
+      font-weight:900;
+      letter-spacing:0.8px;
+      font-size:14px;
+      opacity:0.92;
+      margin-top:12px;
+    }
+
+    .sheet-body{
+      flex:1;
+      overflow:auto;
+      padding:14px 14px 18px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .hint{
+      opacity:0.7;
+      font-size:13px;
+      line-height:1.4;
+      padding:10px 6px;
+    }
+
+    .history-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:8px;
+    }
+
+    .history-item{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.06);
+    }
+
+    .history-left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+      flex:1;
+    }
+
+    .history-topline{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .history-time{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:16px;
+      white-space:nowrap;
+    }
+
+    .history-tag{
+      font-size:12px;
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(0,255,76,0.14);
+      color:rgba(0,255,76,0.92);
+      white-space:nowrap;
+      max-width: 60vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .history-meta{
+      font-size:12px;
+      opacity:0.65;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 78vw;
+    }
+
+    .history-notes{
+      font-size:12px;
+      opacity:0.78;
+      line-height:1.35;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 78vw;
+    }
+
+    .chip{
+      font-size:12px;
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.10);
+      color:rgba(255,255,255,0.78);
+      white-space:nowrap;
+    }
+
+    /* =========================
+       Stop modal
+       ========================= */
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.72);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity 200ms ease;
+      display:grid;
+      place-items:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .modal{
+      width:min(520px, 100%);
+      border-radius:22px;
+      background:rgba(20,20,20,0.96);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      border:1px solid rgba(255,255,255,0.10);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      padding:16px 16px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .modal-title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+    }
+
+    .modal-title h2{
+      font-size:16px;
+      letter-spacing:0.6px;
+      font-weight:900;
+    }
+
+    .modal-sub{
+      font-size:13px;
+      opacity:0.75;
+      font-variant-numeric: tabular-nums;
+      letter-spacing:0.4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+
+    .modal-body{
+      padding:0 16px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.6px;
+      opacity:0.85;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    input, textarea{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      font-size:14px;
+    }
+
+    textarea{
+      resize:none;
+      min-height:96px;
+      line-height:1.35;
+    }
+
+    input:focus, textarea:focus{
+      border-color: rgba(0,255,76,0.35);
+      box-shadow: 0 0 0 3px rgba(0,255,76,0.10);
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      padding:14px 16px 16px;
+      border-top:1px solid rgba(255,255,255,0.10);
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:12px 16px;
+      font-weight:900;
+      letter-spacing:0.6px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, box-shadow 180ms ease;
+    }
+    .btn:active{ transform:scale(0.98); }
+
+    .btn-ghost{
+      background:rgba(255,255,255,0.10);
+      color:rgba(255,255,255,0.86);
+    }
+    .btn-save{
+      background:rgba(0,255,76,0.92);
+      color:#001a08;
+      box-shadow: 0 0 18px rgba(0,255,76,0.18);
+    }
+    .btn-save:disabled{
+      opacity:0.45;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .timer-wrap, .action-btn, .overlay, .sheet, .modal-overlay{ transition:none; }
+    }
+  </style>
 </head>
 <body>
+  <div class="stage">
+    <div class="control" id="control">
+      <div class="timer-wrap" id="timerWrap" aria-hidden="true">
+        <div class="timer" id="timer">00:00.00</div>
+      </div>
 
-    <div class="menu-icon" id="menu-btn"><div></div><div></div><div></div></div>
+      <button class="action-btn" id="actionBtn" type="button">START</button>
+    </div>
+  </div>
 
-    <div id="sidebar-overlay"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="close-sidebar" id="close-x">X</div>
-        <div class="sidebar-header">MENU</div>
-        <ul class="sidebar-list">
-            <li class="sidebar-item" id="menu-goals">GOALS</li>
-            <li class="sidebar-item" style="color:#444;">CALCULATOR</li>
-            <li class="sidebar-item" style="color:#444;">BILLS/EXPENSES</li>
-        </ul>
-        <div class="sidebar-footer">
-            <button class="settings-btn" id="open-settings-btn">SETTINGS</button>
+  <!-- History overlay -->
+  <div class="overlay" id="overlay" aria-hidden="true"></div>
+
+  <!-- History bottom sheet -->
+  <section class="sheet" id="sheet" aria-label="History">
+    <div class="sheet-header" id="sheetHeader" role="button" aria-label="Toggle History">
+      <div class="handle"></div>
+      <div class="sheet-title">HISTORY</div>
+    </div>
+
+    <!-- Empty area in sheet body = close gesture target -->
+    <div class="sheet-body" id="sheetBody">
+      <div class="hint" id="emptyHint">
+        Stopped timers will appear here. Swipe down on empty space to close, tap outside to close, or tap the HISTORY bar.
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- Stop popup/modal -->
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Save job">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2>Save Job</h2>
+          <div class="modal-sub" id="modalSub">Duration: 00:00.00</div>
         </div>
-    </div>
+      </div>
 
-    <div class="rate-container">
-        <div class="rate-label">RATE/HR</div>
-        <div class="rate-input-wrapper">
-            <span class="rate-symbol" id="symbol-label">$</span>
-            <input type="number" id="hourly-rate" class="rate-input" value="25">
+      <div class="modal-body">
+        <div class="field">
+          <label for="tagInput">TAG (REQUIRED)</label>
+          <input id="tagInput" type="text" placeholder="e.g. Warehouse Shift, Delivery Run" maxlength="40" />
         </div>
-    </div>
 
-    <div class="main-app" id="app-container">
-        <div id="earnings-display">$0.00</div>
-        <div id="timer-display">00:00.00</div>
-        <button id="action-btn" class="btn">START GAME</button>
-    </div>
-
-    <div class="widget-box" id="history-widget">
-        <div class="widget-header" id="widget-header">
-            <span id="history-title" style="color:#888;">HISTORY</span>
-            <div class="dash-controls">
-                <button class="dash-btn" id="edit-mode-btn" style="background:var(--pixel-yellow); color:black; border-color:#b45309;">EDIT</button>
-                <button class="dash-btn" id="del-mode-btn" style="background:var(--pixel-red); color:white; border-color:#660000;">DEL</button>
-            </div>
+        <div class="field">
+          <label for="notesInput">NOTES (OPTIONAL)</label>
+          <textarea id="notesInput" placeholder="Add notes (optional)"></textarea>
         </div>
-        <div id="dash-total-display">TOTAL EARNED: $0.00</div>
-        <div class="widget-content"><ul id="history-list" style="list-style:none; padding:0; margin:0;"></ul></div>
-        <div id="confirm-delete-bar">REMOVE SELECTED</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelBtn" type="button">CANCEL</button>
+        <button class="btn btn-save" id="saveBtn" type="button" disabled>SAVE</button>
+      </div>
     </div>
+  </div>
 
-    <div class="modal-overlay" id="settings-modal">
-        <div class="modal-box">
-            <div style="color:var(--pixel-green); text-align:center; font-size:10px;">SETTINGS</div>
-            <label style="font-size:7px; color:#888;">CURRENCY</label>
-            <select id="currency-select" class="modal-input">
-                <option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="¥">¥ JPY</option>
-            </select>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                <span style="font-size:7px;">TAG POP UP</span>
-                <button id="tag-toggle-btn" class="btn" style="padding:5px; font-size:8px; width:60px; background:#222; border-color:#444; color:white;">ON</button>
-            </div>
-            <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'" style="width:100%; margin-top:10px;">CLOSE</button>
-        </div>
-    </div>
+  <script>
+    // ==========================
+    // Storage (simple + durable)
+    // ==========================
+    const LS_KEY = "timer_history_v1";
 
-    <div class="modal-overlay" id="edit-modal">
-        <div class="modal-box">
-            <div style="color:var(--pixel-yellow); text-align:center; font-size:10px;">EDIT ENTRY</div>
-            <input type="text" id="edit-tag" class="modal-input"><input type="text" id="edit-date" class="modal-input">
-            <div style="display:flex; gap:10px;"><input type="text" id="edit-start" class="modal-input"><input type="text" id="edit-end" class="modal-input"></div>
-            <button id="save-edit-btn" class="btn" style="width:100%; background:var(--pixel-yellow); border-color:#b45309;">UPDATE</button>
-        </div>
-    </div>
+    function loadHistory(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
 
-    <div class="modal-overlay" id="log-modal">
-        <div class="modal-box">
-            <div style="color:var(--pixel-green); text-align:center; font-size:10px;">SAVE LOG</div>
-            <input type="text" id="tag-input" class="modal-input" placeholder="TAG NAME...">
-            <input type="text" id="note-input" class="modal-input" placeholder="NOTES...">
-            <button id="save-log-btn" class="btn" style="width:100%">SAVE</button>
-        </div>
-    </div>
+    function saveHistory(){
+      try{
+        localStorage.setItem(LS_KEY, JSON.stringify(history));
+      } catch {}
+    }
 
-    <div id="goals-page">
-        <div class="goals-header"><span>GOALS</span><span id="close-goals" style="cursor:pointer; color:var(--pixel-red);">BACK</span></div>
-        <div class="goal-section-title">STANDARD OBJECTIVES</div>
-        <div id="std-goal-container"></div>
-        <div class="goal-section-title">CUSTOM TIMEFRAMES</div>
-        <button class="btn" id="add-custom-goal" style="width:100%; font-size:7px; margin-bottom:20px; background:var(--pixel-blue); border-color:#2980b9; color:white;">+ ADD TIMEFRAME</button>
-        <div id="custom-goal-container"></div>
-    </div>
+    // ==========================
+    // Timer logic
+    // ==========================
+    const control = document.getElementById("control");
+    const btn = document.getElementById("actionBtn");
+    const timerEl = document.getElementById("timer");
 
-    <div class="modal-overlay" id="custom-goal-modal">
-        <div class="modal-box">
-            <div style="color:var(--pixel-blue); text-align:center; font-size:10px;">NEW GOAL</div>
-            <input type="number" id="cg-target" class="modal-input" placeholder="TARGET AMOUNT">
-            <input type="number" id="cg-days" class="modal-input" placeholder="DURATION (DAYS)">
-            <button id="cg-save" class="btn" style="width:100%">CREATE</button>
-        </div>
-    </div>
+    let running = false;
+    let startAt = 0;
+    let rafId = null;
 
-    <script>
-        let startTime, timerInterval, currentCurrency = "$", isDelMode = false, isEditMode = false, tagPop = true;
-        let sStart, sEnd, lDur, lEarn, liveEarnings = 0, editingId = null;
-        let logs = JSON.parse(localStorage.getItem('pixelLogs')) || [];
-        let goalTargets = JSON.parse(localStorage.getItem('goalTargets')) || { Daily: 100, Weekly: 500, Monthly: 2000, Yearly: 20000 };
-        let customGoals = JSON.parse(localStorage.getItem('customGoals')) || [];
+    // pending stop data (saved only after modal Save)
+    let pendingMs = 0;
+    let pendingDisplay = "00:00.00";
 
-        window.onload = () => {
-            currentCurrency = localStorage.getItem('pixelCurr') || "$";
-            document.getElementById('symbol-label').innerHTML = currentCurrency;
-            document.getElementById('currency-select').value = currentCurrency;
-            document.getElementById('hourly-rate').value = localStorage.getItem('pixelRate') || "25";
-            tagPop = localStorage.getItem('tagPop') !== "false";
-            document.getElementById('tag-toggle-btn').innerHTML = tagPop ? "ON" : "OFF";
-            renderLogs(); initGoals();
-        };
+    let history = loadHistory(); // { ms, display, whenISO, tag, notes }
 
-        function saveState() {
-            localStorage.setItem('pixelLogs', JSON.stringify(logs));
-            localStorage.setItem('pixelCurr', currentCurrency);
-            localStorage.setItem('pixelRate', document.getElementById('hourly-rate').value);
-            localStorage.setItem('tagPop', tagPop);
-            localStorage.setItem('goalTargets', JSON.stringify(goalTargets));
-            localStorage.setItem('customGoals', JSON.stringify(customGoals));
+    function formatTime(ms){
+      const totalCentis = Math.floor(ms / 10); // 10ms = 1 centisecond
+      const centis = totalCentis % 100;
+      const totalSeconds = Math.floor(totalCentis / 100);
+      const seconds = totalSeconds % 60;
+      const minutes = Math.floor(totalSeconds / 60);
+
+      const mm = String(minutes).padStart(2, "0");
+      const ss = String(seconds).padStart(2, "0");
+      const cc = String(centis).padStart(2, "0");
+      return `${mm}:${ss}.${cc}`;
+    }
+
+    function tick(now){
+      const elapsed = now - startAt;
+      timerEl.textContent = formatTime(elapsed);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function start(){
+      running = true;
+      control.classList.add("running");
+      btn.textContent = "STOP";
+      btn.setAttribute("aria-pressed", "true");
+
+      startAt = performance.now();
+      timerEl.textContent = "00:00.00";
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function hardStopTimerCapture(){
+      // capture final elapsed before resetting / modal
+      pendingMs = Math.max(0, performance.now() - startAt);
+      pendingDisplay = formatTime(pendingMs);
+
+      running = false;
+      control.classList.remove("running");
+      btn.textContent = "START";
+      btn.setAttribute("aria-pressed", "false");
+
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    btn.addEventListener("click", () => {
+      if (!running) {
+        start();
+      } else {
+        // STOP clicked -> capture time + open modal
+        hardStopTimerCapture();
+        openSaveModal();
+      }
+    });
+
+    // ==========================
+    // History rendering
+    // ==========================
+    const historyList = document.getElementById("historyList");
+    const emptyHint = document.getElementById("emptyHint");
+
+    function formatPrettyDate(iso){
+      const d = new Date(iso);
+      const date = d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
+      const time = d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
+      return `${date} • ${time}`;
+    }
+
+    function renderHistory(){
+      historyList.innerHTML = "";
+      if (!history.length){
+        emptyHint.style.display = "block";
+        return;
+      }
+      emptyHint.style.display = "none";
+
+      for (let i = 0; i < history.length; i++){
+        const item = history[i];
+
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const left = document.createElement("div");
+        left.className = "history-left";
+
+        const top = document.createElement("div");
+        top.className = "history-topline";
+
+        const t = document.createElement("div");
+        t.className = "history-time";
+        t.textContent = item.display;
+
+        const tag = document.createElement("div");
+        tag.className = "history-tag";
+        tag.textContent = item.tag || "Untitled";
+
+        top.appendChild(t);
+        top.appendChild(tag);
+
+        const meta = document.createElement("div");
+        meta.className = "history-meta";
+        meta.textContent = formatPrettyDate(item.whenISO);
+
+        left.appendChild(top);
+        left.appendChild(meta);
+
+        if (item.notes && item.notes.trim()){
+          const notes = document.createElement("div");
+          notes.className = "history-notes";
+          notes.textContent = item.notes.trim();
+          left.appendChild(notes);
         }
 
-        // --- DASHBOARD ---
-        document.getElementById('widget-header').onclick = function() {
-            const w = document.getElementById('history-widget'); w.classList.toggle('open');
-            if(!w.classList.contains('open')) { isEditMode = false; isDelMode = false; document.getElementById('history-list').className = ""; document.getElementById('confirm-delete-bar').style.display="none";}
-            document.getElementById('history-title').innerHTML = w.classList.contains('open') ? "HISTORY_LOG ▲" : "HISTORY";
-            calculateTotal();
-        };
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = `#${history.length - i}`;
 
-        function toggleMode(mode) {
-            if (mode === 'del') { isDelMode = !isDelMode; isEditMode = false; }
-            else { isEditMode = !isEditMode; isDelMode = false; }
-            document.getElementById('history-list').className = isDelMode ? 'delete-mode' : (isEditMode ? 'edit-mode' : '');
-            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('selected-del', 'selected-edit'));
-            document.getElementById('confirm-delete-bar').style.display = 'none';
-        }
-        document.getElementById('del-mode-btn').onclick = (e) => { e.stopPropagation(); toggleMode('del'); };
-        document.getElementById('edit-mode-btn').onclick = (e) => { e.stopPropagation(); toggleMode('edit'); };
+        row.appendChild(left);
+        row.appendChild(chip);
 
-        function renderLogs() {
-            const list = document.getElementById('history-list'); list.innerHTML = "";
-            logs.slice().reverse().forEach(log => {
-                const li = document.createElement('li'); li.className = 'history-item';
-                li.innerHTML = `<div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; justify-content:space-between; font-size:10px;"><span>${log.tag}</span><span style="color:var(--pixel-green);">${log.earnings}</span></div>
-                    <div style="display:flex; justify-content:space-between; font-size:7px; color:#888;"><span>${log.date} | ${log.duration}</span><span>${log.start} - ${log.end}</span></div></div>`;
-                li.onclick = () => {
-                    if (isDelMode) { li.classList.toggle('selected-del'); const c = document.querySelectorAll('.selected-del').length; document.getElementById('confirm-delete-bar').style.display = c > 0 ? 'block' : 'none'; }
-                    else if (isEditMode) {
-                        li.classList.add('selected-edit');
-                        setTimeout(() => { editingId = log.id; document.getElementById('edit-tag').value = log.tag; document.getElementById('edit-date').value = log.date; document.getElementById('edit-start').value = log.start; document.getElementById('edit-end').value = log.end; document.getElementById('edit-modal').style.display = 'flex'; toggleMode('edit'); }, 500);
-                    }
-                };
-                list.appendChild(li);
-            });
-            calculateTotal();
-        }
+        historyList.appendChild(row);
+      }
+    }
 
-        function calculateTotal() {
-            const sum = logs.reduce((t, l) => t + (parseFloat(l.earnings.replace(/[^\d.-]/g, '')) || 0), 0);
-            document.getElementById('dash-total-display').innerHTML = `TOTAL EARNED: ${currentCurrency}${sum.toFixed(2)}`;
-        }
+    // ==========================
+    // Bottom sheet behavior
+    // - Opens to 70% screen
+    // - Closes when user swipes down on EMPTY spot (not on items)
+    // - Closes when user taps outside
+    // - Toggles when user taps header ("HISTORY")
+    // ==========================
+    const overlay = document.getElementById("overlay");
+    const sheet = document.getElementById("sheet");
+    const sheetHeader = document.getElementById("sheetHeader");
+    const sheetBody = document.getElementById("sheetBody");
 
-        // --- TIMER ---
-        document.getElementById('action-btn').onclick = function() {
-            if (this.innerHTML === "START GAME") {
-                sStart = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
-                document.getElementById('app-container').classList.add('show-displays');
-                startTime = Date.now();
-                timerInterval = setInterval(() => {
-                    const elapsed = Date.now() - startTime;
-                    const mm = Math.floor(elapsed/60000).toString().padStart(2,'0'), ss = Math.floor((elapsed%60000)/1000).toString().padStart(2,'0'), ms = Math.floor((elapsed%1000)/10).toString().padStart(2,'0');
-                    document.getElementById('timer-display').innerHTML = `${mm}:${ss}.${ms}`;
-                    liveEarnings = (elapsed / 3600000) * (parseFloat(document.getElementById('hourly-rate').value) || 0);
-                    document.getElementById('earnings-display').innerHTML = currentCurrency + liveEarnings.toFixed(2);
-                    updateGoalBars();
-                }, 10);
-                this.innerHTML = "STOP GAME"; this.classList.add('stop');
-            } else {
-                sEnd = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false});
-                lDur = document.getElementById('timer-display').innerHTML; lEarn = document.getElementById('earnings-display').innerHTML;
-                clearInterval(timerInterval); liveEarnings = 0;
-                document.getElementById('app-container').classList.remove('show-displays');
-                this.innerHTML = "START GAME"; this.classList.remove('stop');
-                if (tagPop) { document.getElementById('log-modal').style.display='flex'; document.getElementById('tag-input').focus(); }
-                else addEntry(lDur, lEarn, "no tag", "", new Date().toLocaleDateString());
-            }
-        };
+    let sheetOpen = false;
 
-        // --- GOALS ---
-        function initGoals() {
-            const std = document.getElementById('std-goal-container'); const cust = document.getElementById('custom-goal-container');
-            std.innerHTML = ""; cust.innerHTML = "";
-            Object.keys(goalTargets).forEach(key => renderGoalCard(std, key, goalTargets[key], false));
-            customGoals.forEach((cg, i) => renderGoalCard(cust, `${cg.days}D GOAL`, cg.target, true, i));
-            updateGoalBars();
-        }
+    let sheetHeightPx = 0;
+    let peekPx = 0;
+    let openY = 0;      // translateY when open
+    let closedY = 0;    // translateY when collapsed
+    let currentY = 0;
 
-        function renderGoalCard(container, label, target, isCustom, idx) {
-            const card = document.createElement('div'); card.className = 'goal-card';
-            card.innerHTML = `<div class="goal-info"><span>${label}</span><span id="perc-${label}-${isCustom?idx:'std'}">0%</span></div>
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <input type="number" class="goal-input" value="${target}">
-                    <span style="font-size:8px;">${currentCurrency}</span>
-                    ${isCustom ? `<span style="color:var(--pixel-red); font-size:7px; cursor:pointer; margin-left:auto;" onclick="removeCG(${idx})">DEL</span>` : ''}
-                </div>
-                <div class="progress-container"><div class="progress-liquid" id="bar-${label}-${isCustom?idx:'std'}"></div></div>`;
-            container.appendChild(card);
-            card.querySelector('input').oninput = (e) => {
-                const val = parseFloat(e.target.value) || 0;
-                if(isCustom) customGoals[idx].target = val; else goalTargets[label] = val;
-                saveState(); updateGoalBars();
-            };
-        }
+    function measureSheet(){
+      peekPx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sheetPeek")) || 64;
+      sheetHeightPx = Math.round(window.innerHeight * 0.70);
+      sheet.style.height = sheetHeightPx + "px";
+      openY = 0;
+      closedY = Math.max(0, sheetHeightPx - peekPx);
 
-        function updateGoalBars() {
-            const now = new Date();
-            const totals = { Daily: 0, Weekly: 0, Monthly: 0, Yearly: 0 };
-            logs.forEach(l => {
-                const d = new Date(l.date); const amt = parseFloat(l.earnings.replace(/[^\d.-]/g, '')) || 0;
-                if (d.toDateString() === now.toDateString()) totals.Daily += amt;
-                if (now - d < 7 * 86400000) totals.Weekly += amt;
-                if (now - d < 30 * 86400000) totals.Monthly += amt;
-                if (now - d < 365 * 86400000) totals.Yearly += amt;
-            });
-            Object.keys(totals).forEach(k => {
-                const p = Math.min(((totals[k] + liveEarnings) / (goalTargets[k] || 1)) * 100, 100);
-                if(document.getElementById(`bar-${k}-std`)) { document.getElementById(`bar-${k}-std`).style.width = p + "%"; document.getElementById(`perc-${k}-std`).innerHTML = Math.floor(p) + "%"; }
-            });
-            customGoals.forEach((cg, i) => {
-                let sum = logs.reduce((t, l) => (now - new Date(l.date) < cg.days * 86400000) ? t + (parseFloat(l.earnings.replace(/[^\d.-]/g, '')) || 0) : t, 0);
-                const p = Math.min(((sum + liveEarnings) / (cg.target || 1)) * 100, 100);
-                const bar = document.getElementById(`bar-${cg.days}D GOAL-${i}`);
-                if(bar) { bar.style.width = p + "%"; document.getElementById(`perc-${cg.days}D GOAL-${i}`).innerHTML = Math.floor(p) + "%"; }
-            });
-        }
+      currentY = sheetOpen ? openY : closedY;
+      setSheetY(currentY, true);
+    }
 
-        // --- UI TOGGLES ---
-        const menuBtn = document.getElementById('menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        menuBtn.onclick = () => { sidebar.classList.add('open'); menuBtn.classList.add('hidden'); document.getElementById('sidebar-overlay').style.display='block'; };
-        const closeSide = () => { sidebar.classList.remove('open'); menuBtn.classList.remove('hidden'); document.getElementById('sidebar-overlay').style.display='none'; };
-        document.getElementById('sidebar-overlay').onclick = closeSide; document.getElementById('close-x').onclick = closeSide;
-        document.getElementById('open-settings-btn').onclick = () => document.getElementById('settings-modal').style.display='flex';
-        document.getElementById('menu-goals').onclick = () => { document.getElementById('goals-page').style.display = 'flex'; closeSide(); initGoals(); };
-        document.getElementById('close-goals').onclick = () => document.getElementById('goals-page').style.display = 'none';
-        document.getElementById('add-custom-goal').onclick = () => document.getElementById('custom-goal-modal').style.display = 'flex';
-        document.getElementById('tag-toggle-btn').onclick = function() { tagPop = !tagPop; this.innerHTML = tagPop ? "ON" : "OFF"; saveState(); };
-        document.getElementById('cg-save').onclick = () => { customGoals.push({ target: parseFloat(document.getElementById('cg-target').value) || 100, days: parseInt(document.getElementById('cg-days').value) || 7 }); saveState(); initGoals(); document.getElementById('custom-goal-modal').style.display='none'; };
-        window.removeCG = (i) => { customGoals.splice(i, 1); saveState(); initGoals(); };
-        document.getElementById('save-log-btn').onclick = () => { const t = document.getElementById('tag-input'); addEntry(lDur, lEarn, t.value.trim()===""?"no tag":t.value.toUpperCase(), document.getElementById('note-input').value.trim(), new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'2-digit'})); t.value = ""; };
-        function addEntry(d, e, t, n, dt) { logs.push({ id: Date.now(), tag: t, earnings: e, duration: d, date: dt, start: sStart, end: sEnd, note: n }); saveState(); renderLogs(); updateGoalBars(); document.getElementById('log-modal').style.display = 'none'; }
-        document.getElementById('confirm-delete-bar').onclick = () => { document.querySelectorAll('.selected-del').forEach(el => { const tag = el.querySelector('span').innerText; logs = logs.filter(l => l.tag !== tag); }); saveState(); renderLogs(); toggleMode('del'); };
-        document.getElementById('save-edit-btn').onclick = () => { const log = logs.find(l => l.id === editingId); log.tag = document.getElementById('edit-tag').value; log.date = document.getElementById('edit-date').value; log.start = document.getElementById('edit-start').value; log.end = document.getElementById('edit-end').value; saveState(); renderLogs(); document.getElementById('edit-modal').style.display = 'none'; };
-        document.getElementById('currency-select').onchange = (e) => { currentCurrency = e.target.value; document.getElementById('symbol-label').innerHTML = currentCurrency; saveState(); initGoals(); };
-    </script>
+    function setSheetY(y, immediate=false){
+      currentY = Math.min(Math.max(y, openY), closedY);
+
+      if (immediate) sheet.classList.add("no-transition");
+      else sheet.classList.remove("no-transition");
+
+      sheet.style.setProperty("--sheetY", `${currentY}px`);
+
+      const isShown = currentY < (closedY - 1);
+      overlay.classList.toggle("show", isShown);
+      overlay.setAttribute("aria-hidden", String(!isShown));
+
+      if (immediate){
+        requestAnimationFrame(() => sheet.classList.remove("no-transition"));
+      }
+    }
+
+    function openSheet(){
+      sheetOpen = true;
+      setSheetY(openY, false);
+    }
+
+    function closeSheet(){
+      sheetOpen = false;
+      setSheetY(closedY, false);
+    }
+
+    function toggleSheet(){
+      sheetOpen ? closeSheet() : openSheet();
+    }
+
+    overlay.addEventListener("click", () => closeSheet());
+    sheetHeader.addEventListener("click", () => toggleSheet());
+
+    // Dragging / swipe down close on empty spot
+    let dragging = false;
+    let dragStartY = 0;
+    let startSheetY = 0;
+    let allowDrag = false;
+    let dragDy = 0;
+
+    function onPointerDown(e, source){
+      // Allow drag from:
+      // - header always
+      // - body only if NOT on a history item (empty spot)
+      if (source === "header") {
+        allowDrag = true;
+      } else {
+        const inItem = e.target.closest(".history-item");
+        allowDrag = !inItem;
+      }
+
+      if (!allowDrag) return;
+
+      dragging = true;
+      dragDy = 0;
+      sheet.classList.add("no-transition");
+      dragStartY = e.clientY;
+      startSheetY = currentY;
+
+      try { sheet.setPointerCapture(e.pointerId); } catch {}
+    }
+
+    function onPointerMove(e){
+      if (!dragging) return;
+      dragDy = e.clientY - dragStartY;
+
+      const nextY = startSheetY + dragDy;
+      setSheetY(nextY, true);
+    }
+
+    function onPointerUp(e){
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove("no-transition");
+
+      // If sheet is open and user swiped DOWN on empty spot, close it (low threshold).
+      // This is the behavior you asked for: swipe down on open space closes.
+      if (sheetOpen && dragDy > 35){
+        closeSheet();
+      } else if (!sheetOpen && dragDy < -35){
+        // If collapsed and user swiped UP, open
+        openSheet();
+      } else {
+        // Otherwise snap to nearest (for mild drags)
+        const midpoint = (closedY * 0.5);
+        if (currentY < midpoint) openSheet();
+        else closeSheet();
+      }
+
+      try { sheet.releasePointerCapture(e.pointerId); } catch {}
+    }
+
+    sheetHeader.addEventListener("pointerdown", (e) => onPointerDown(e, "header"));
+    sheetBody.addEventListener("pointerdown", (e) => onPointerDown(e, "body"));
+    sheet.addEventListener("pointermove", onPointerMove);
+    sheet.addEventListener("pointerup", onPointerUp);
+    sheet.addEventListener("pointercancel", onPointerUp);
+
+    // ==========================
+    // Save modal behavior
+    // ==========================
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalSub = document.getElementById("modalSub");
+    const tagInput = document.getElementById("tagInput");
+    const notesInput = document.getElementById("notesInput");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    function openSaveModal(){
+      modalSub.textContent = `Duration: ${pendingDisplay}`;
+      tagInput.value = "";
+      notesInput.value = "";
+      saveBtn.disabled = true;
+
+      modalOverlay.classList.add("show");
+      modalOverlay.setAttribute("aria-hidden", "false");
+
+      // focus tag
+      setTimeout(() => tagInput.focus(), 0);
+    }
+
+    function closeSaveModal(){
+      modalOverlay.classList.remove("show");
+      modalOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    function resetAfterStop(){
+      // reset timer text after modal action
+      timerEl.textContent = "00:00.00";
+      pendingMs = 0;
+      pendingDisplay = "00:00.00";
+    }
+
+    tagInput.addEventListener("input", () => {
+      saveBtn.disabled = !(tagInput.value.trim().length > 0);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      closeSaveModal();
+      resetAfterStop();
+    });
+
+    // Click outside modal closes (treat as cancel)
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay){
+        closeSaveModal();
+        resetAfterStop();
+      }
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const tag = tagInput.value.trim();
+      if (!tag) return;
+
+      const notes = notesInput.value || "";
+      const when = new Date();
+
+      history.unshift({
+        ms: pendingMs,
+        display: pendingDisplay,
+        whenISO: when.toISOString(),
+        tag,
+        notes
+      });
+
+      saveHistory();
+      renderHistory();
+      closeSaveModal();
+      resetAfterStop();
+
+      // Bring attention to saved item
+      openSheet();
+    });
+
+    // ==========================
+    // Init
+    // ==========================
+    measureSheet();
+    window.addEventListener("resize", measureSheet);
+
+    closeSheet();
+    renderHistory();
+  </script>
 </body>
 </html>
