@@ -27,28 +27,76 @@
       overflow:hidden;
     }
 
+    /* =========================
+       Hourly rate (top center)
+       ========================= */
+    .top-rate{
+      position:fixed;
+      top:12px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:0;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      backdrop-filter:none;
+    }
+
+    .top-rate label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.6px;
+      opacity:0.85;
+      white-space:nowrap;
+      margin:0;
+    }
+
+    .rate-input{
+      width:96px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:transparent;
+      color:var(--text);
+      padding:6px 8px;
+      outline:none;
+      font-size:13px;
+      font-weight:900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing:0.2px;
+      text-align:center;
+    }
+
+    .rate-input:focus{
+      border-color: rgba(0,255,76,0.40);
+      box-shadow: 0 0 0 3px rgba(0,255,76,0.08);
+    }
+
     /* Center control */
     .stage{
       position:fixed;
       inset:0;
       display:grid;
       place-items:center;
+      padding-top: 56px;
       padding-bottom: calc(var(--sheetPeek) + 18px);
     }
 
     .control{
+      position:relative;
       display:flex;
       align-items:center;
       gap:12px;
     }
 
-    /* Timer text only (no frame/background/border) */
     .timer-wrap{
       display:flex;
       align-items:center;
       justify-content:center;
 
-      /* hidden state */
       max-width:0;
       opacity:0;
       overflow:hidden;
@@ -68,6 +116,32 @@
       white-space:nowrap;
       user-select:none;
       text-shadow: 0 0 18px rgba(255,255,255,0.12);
+    }
+
+    .earnings-float{
+      position:absolute;
+      left:50%;
+      bottom:76px;
+      transform:translate(-50%, 14px);
+      opacity:0;
+      pointer-events:none;
+      transition: transform 320ms ease, opacity 240ms ease;
+      will-change: transform, opacity;
+
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:33px; /* 1.5x timer */
+      color:rgba(0,255,76,0.95);
+      text-shadow:
+        0 0 18px rgba(0,255,76,0.22),
+        0 0 44px rgba(0,255,76,0.14);
+      white-space:nowrap;
+    }
+
+    .running .earnings-float{
+      opacity:1;
+      transform:translate(-50%, 0);
     }
 
     .action-btn{
@@ -93,7 +167,6 @@
 
     .action-btn:active{ transform:scale(0.98); }
 
-    /* Running state */
     .running .timer-wrap{
       max-width:260px;
       opacity:1;
@@ -124,7 +197,6 @@
       pointer-events:auto;
     }
 
-    /* Bottom sheet */
     .sheet{
       position:fixed;
       left:0;
@@ -142,7 +214,7 @@
       display:flex;
       flex-direction:column;
       overflow:hidden;
-      touch-action:none; /* dragging handled */
+      touch-action:none;
     }
     .sheet.no-transition{ transition:none; }
 
@@ -154,11 +226,14 @@
       position:relative;
       cursor:pointer;
       user-select:none;
+      padding:0 14px;
     }
 
     .handle{
       position:absolute;
       top:10px;
+      left:50%;
+      transform:translateX(-50%);
       width:68px;
       height:6px;
       border-radius:999px;
@@ -171,6 +246,37 @@
       font-size:14px;
       opacity:0.92;
       margin-top:12px;
+    }
+
+    /* NEW: total row under the header bar */
+    .sheet-total-row{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      padding:8px 14px 6px;
+      border-top:1px solid rgba(255,255,255,0.08);
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      user-select:none;
+    }
+
+    .sheet-total-label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.6px;
+      color:rgba(255,255,255,0.92); /* "TOTAL" in white */
+      white-space:nowrap;
+    }
+
+    .sheet-total-value{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:12px;
+      color:rgba(0,255,76,0.92);
+      text-shadow: 0 0 18px rgba(0,255,76,0.12);
+      white-space:nowrap;
     }
 
     .sheet-body{
@@ -196,7 +302,7 @@
 
     .history-item{
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       justify-content:space-between;
       gap:12px;
       padding:12px 12px;
@@ -207,66 +313,70 @@
     .history-left{
       display:flex;
       flex-direction:column;
-      gap:6px;
+      gap:4px;
       min-width:0;
       flex:1;
     }
 
-    .history-topline{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .history-time{
-      font-variant-numeric: tabular-nums;
+    .tag-header{
       font-weight:900;
       letter-spacing:0.4px;
       font-size:16px;
       white-space:nowrap;
-    }
-
-    .history-tag{
-      font-size:12px;
-      font-weight:900;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(0,255,76,0.14);
-      color:rgba(0,255,76,0.92);
-      white-space:nowrap;
-      max-width: 60vw;
       overflow:hidden;
       text-overflow:ellipsis;
+      max-width: 78vw;
+      line-height:1.15;
     }
 
-    .history-meta{
+    .duration-line{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:14px;
+      opacity:0.95;
+      white-space:nowrap;
+      line-height:1.15;
+    }
+
+    .clock-line{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.75;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 78vw;
+      line-height:1.15;
+    }
+
+    .date-line{
       font-size:12px;
       opacity:0.65;
       white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 78vw;
+      line-height:1.15;
     }
 
-    .history-notes{
+    .notes-line{
       font-size:12px;
       opacity:0.78;
-      line-height:1.35;
+      line-height:1.25;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       max-width: 78vw;
     }
 
-    .chip{
-      font-size:12px;
+    .history-amount{
+      font-variant-numeric: tabular-nums;
       font-weight:900;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,0.10);
-      color:rgba(255,255,255,0.78);
+      letter-spacing:0.4px;
+      font-size:14px;
+      color:rgba(0,255,76,0.92);
       white-space:nowrap;
+      text-shadow: 0 0 18px rgba(0,255,76,0.14);
+      align-self:center;
+      padding-left:6px;
     }
 
     /* =========================
@@ -407,15 +517,22 @@
       box-shadow:none;
     }
 
-    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
-      .timer-wrap, .action-btn, .overlay, .sheet, .modal-overlay{ transition:none; }
+      .timer-wrap, .earnings-float, .action-btn, .overlay, .sheet, .modal-overlay{ transition:none; }
     }
   </style>
 </head>
 <body>
+  <!-- Hourly Rate (top center) -->
+  <div class="top-rate" aria-label="Hourly rate">
+    <label for="rateInput">HOURLY RATE</label>
+    <input id="rateInput" class="rate-input" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" />
+  </div>
+
   <div class="stage">
     <div class="control" id="control">
+      <div class="earnings-float" id="earningsFloat">$0.00</div>
+
       <div class="timer-wrap" id="timerWrap" aria-hidden="true">
         <div class="timer" id="timer">00:00.00</div>
       </div>
@@ -434,7 +551,12 @@
       <div class="sheet-title">HISTORY</div>
     </div>
 
-    <!-- Empty area in sheet body = close gesture target -->
+    <!-- NEW total row directly under header bar -->
+    <div class="sheet-total-row">
+      <div class="sheet-total-label">TOTAL</div>
+      <div class="sheet-total-value" id="historyTotal">$0.00</div>
+    </div>
+
     <div class="sheet-body" id="sheetBody">
       <div class="hint" id="emptyHint">
         Stopped timers will appear here. Swipe down on empty space to close, tap outside to close, or tap the HISTORY bar.
@@ -474,9 +596,10 @@
 
   <script>
     // ==========================
-    // Storage (simple + durable)
+    // Storage
     // ==========================
-    const LS_KEY = "timer_history_v1";
+    const LS_KEY = "timer_history_v3";
+    const RATE_KEY = "hourly_rate_v1";
 
     function loadHistory(){
       try{
@@ -494,6 +617,52 @@
       } catch {}
     }
 
+    function loadRate(){
+      try{
+        const raw = localStorage.getItem(RATE_KEY);
+        const n = raw === null ? NaN : Number(raw);
+        return Number.isFinite(n) ? n : 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function saveRate(val){
+      try{ localStorage.setItem(RATE_KEY, String(val)); } catch {}
+    }
+
+    // ==========================
+    // Money helpers
+    // ==========================
+    function formatMoney(n){
+      return `$${n.toFixed(2)}`;
+    }
+
+    function calcEarnings(ms, rate){
+      const hours = ms / 3600000;
+      return hours * rate;
+    }
+
+    // ==========================
+    // Hourly rate + earnings
+    // ==========================
+    const rateInput = document.getElementById("rateInput");
+    const earningsFloat = document.getElementById("earningsFloat");
+    const historyTotalEl = document.getElementById("historyTotal");
+
+    let hourlyRate = loadRate();
+    rateInput.value = hourlyRate ? String(hourlyRate) : "";
+
+    function getRate(){
+      const v = Number(rateInput.value);
+      return Number.isFinite(v) && v > 0 ? v : 0;
+    }
+
+    rateInput.addEventListener("input", () => {
+      hourlyRate = getRate();
+      saveRate(hourlyRate);
+    });
+
     // ==========================
     // Timer logic
     // ==========================
@@ -502,17 +671,23 @@
     const timerEl = document.getElementById("timer");
 
     let running = false;
-    let startAt = 0;
+    let startAtPerf = 0;
+    let startAtWall = null;
     let rafId = null;
 
-    // pending stop data (saved only after modal Save)
+    // pending stop data
     let pendingMs = 0;
     let pendingDisplay = "00:00.00";
+    let pendingClockIn = "";
+    let pendingClockOut = "";
+    let pendingDate = "";
+    let pendingWhenISO = "";
+    let pendingAmount = 0;
 
-    let history = loadHistory(); // { ms, display, whenISO, tag, notes }
+    let history = loadHistory();
 
     function formatTime(ms){
-      const totalCentis = Math.floor(ms / 10); // 10ms = 1 centisecond
+      const totalCentis = Math.floor(ms / 10);
       const centis = totalCentis % 100;
       const totalSeconds = Math.floor(totalCentis / 100);
       const seconds = totalSeconds % 60;
@@ -524,27 +699,53 @@
       return `${mm}:${ss}.${cc}`;
     }
 
+    function formatClock(d){
+      return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function formatDateOnly(d){
+      return d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
+    }
+
     function tick(now){
-      const elapsed = now - startAt;
+      const elapsed = now - startAtPerf;
       timerEl.textContent = formatTime(elapsed);
+
+      const earned = calcEarnings(elapsed, hourlyRate);
+      earningsFloat.textContent = formatMoney(earned);
+
       rafId = requestAnimationFrame(tick);
     }
 
     function start(){
+      hourlyRate = getRate();
+      saveRate(hourlyRate);
+
       running = true;
       control.classList.add("running");
       btn.textContent = "STOP";
       btn.setAttribute("aria-pressed", "true");
 
-      startAt = performance.now();
+      startAtPerf = performance.now();
+      startAtWall = new Date();
       timerEl.textContent = "00:00.00";
+      earningsFloat.textContent = formatMoney(0);
+
       rafId = requestAnimationFrame(tick);
     }
 
     function hardStopTimerCapture(){
-      // capture final elapsed before resetting / modal
-      pendingMs = Math.max(0, performance.now() - startAt);
+      const stopWall = new Date();
+
+      pendingMs = Math.max(0, performance.now() - startAtPerf);
       pendingDisplay = formatTime(pendingMs);
+
+      pendingClockIn = startAtWall ? formatClock(startAtWall) : "";
+      pendingClockOut = formatClock(stopWall);
+      pendingDate = startAtWall ? formatDateOnly(startAtWall) : formatDateOnly(stopWall);
+
+      pendingWhenISO = stopWall.toISOString();
+      pendingAmount = calcEarnings(pendingMs, hourlyRate);
 
       running = false;
       control.classList.remove("running");
@@ -556,14 +757,28 @@
     }
 
     btn.addEventListener("click", () => {
-      if (!running) {
-        start();
-      } else {
-        // STOP clicked -> capture time + open modal
+      if (!running) start();
+      else {
         hardStopTimerCapture();
         openSaveModal();
       }
     });
+
+    // ==========================
+    // History total
+    // ==========================
+    function computeHistoryTotal(){
+      let sum = 0;
+      for (const item of history){
+        const amt = Number(item.amount);
+        if (Number.isFinite(amt)) sum += amt;
+      }
+      return sum;
+    }
+
+    function renderHistoryTotal(){
+      historyTotalEl.textContent = formatMoney(computeHistoryTotal());
+    }
 
     // ==========================
     // History rendering
@@ -571,17 +786,11 @@
     const historyList = document.getElementById("historyList");
     const emptyHint = document.getElementById("emptyHint");
 
-    function formatPrettyDate(iso){
-      const d = new Date(iso);
-      const date = d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
-      const time = d.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit" });
-      return `${date} • ${time}`;
-    }
-
     function renderHistory(){
       historyList.innerHTML = "";
       if (!history.length){
         emptyHint.style.display = "block";
+        renderHistoryTotal();
         return;
       }
       emptyHint.style.display = "none";
@@ -595,51 +804,49 @@
         const left = document.createElement("div");
         left.className = "history-left";
 
-        const top = document.createElement("div");
-        top.className = "history-topline";
+        const tagHeader = document.createElement("div");
+        tagHeader.className = "tag-header";
+        tagHeader.textContent = (item.tag || "Untitled").trim();
 
-        const t = document.createElement("div");
-        t.className = "history-time";
-        t.textContent = item.display;
+        const durationLine = document.createElement("div");
+        durationLine.className = "duration-line";
+        durationLine.textContent = item.duration || "00:00.00";
 
-        const tag = document.createElement("div");
-        tag.className = "history-tag";
-        tag.textContent = item.tag || "Untitled";
+        const clockLine = document.createElement("div");
+        clockLine.className = "clock-line";
+        const ci = item.clockIn || "";
+        const co = item.clockOut || "";
+        clockLine.textContent = (ci && co) ? `${ci} - ${co}` : "";
 
-        top.appendChild(t);
-        top.appendChild(tag);
+        const dateLine = document.createElement("div");
+        dateLine.className = "date-line";
+        dateLine.textContent = item.date || "";
 
-        const meta = document.createElement("div");
-        meta.className = "history-meta";
-        meta.textContent = formatPrettyDate(item.whenISO);
+        const notesLine = document.createElement("div");
+        notesLine.className = "notes-line";
+        notesLine.textContent = (item.notes || "").trim();
 
-        left.appendChild(top);
-        left.appendChild(meta);
+        left.appendChild(tagHeader);
+        left.appendChild(durationLine);
+        if (clockLine.textContent) left.appendChild(clockLine);
+        if (dateLine.textContent) left.appendChild(dateLine);
+        if (notesLine.textContent) left.appendChild(notesLine);
 
-        if (item.notes && item.notes.trim()){
-          const notes = document.createElement("div");
-          notes.className = "history-notes";
-          notes.textContent = item.notes.trim();
-          left.appendChild(notes);
-        }
-
-        const chip = document.createElement("div");
-        chip.className = "chip";
-        chip.textContent = `#${history.length - i}`;
+        const amountEl = document.createElement("div");
+        amountEl.className = "history-amount";
+        const amt = Number(item.amount);
+        amountEl.textContent = Number.isFinite(amt) ? formatMoney(amt) : formatMoney(0);
 
         row.appendChild(left);
-        row.appendChild(chip);
-
+        row.appendChild(amountEl);
         historyList.appendChild(row);
       }
+
+      renderHistoryTotal();
     }
 
     // ==========================
     // Bottom sheet behavior
-    // - Opens to 70% screen
-    // - Closes when user swipes down on EMPTY spot (not on items)
-    // - Closes when user taps outside
-    // - Toggles when user taps header ("HISTORY")
     // ==========================
     const overlay = document.getElementById("overlay");
     const sheet = document.getElementById("sheet");
@@ -647,11 +854,10 @@
     const sheetBody = document.getElementById("sheetBody");
 
     let sheetOpen = false;
-
     let sheetHeightPx = 0;
     let peekPx = 0;
-    let openY = 0;      // translateY when open
-    let closedY = 0;    // translateY when collapsed
+    let openY = 0;
+    let closedY = 0;
     let currentY = 0;
 
     function measureSheet(){
@@ -707,16 +913,12 @@
     let dragDy = 0;
 
     function onPointerDown(e, source){
-      // Allow drag from:
-      // - header always
-      // - body only if NOT on a history item (empty spot)
       if (source === "header") {
         allowDrag = true;
       } else {
         const inItem = e.target.closest(".history-item");
         allowDrag = !inItem;
       }
-
       if (!allowDrag) return;
 
       dragging = true;
@@ -731,7 +933,6 @@
     function onPointerMove(e){
       if (!dragging) return;
       dragDy = e.clientY - dragStartY;
-
       const nextY = startSheetY + dragDy;
       setSheetY(nextY, true);
     }
@@ -741,15 +942,11 @@
       dragging = false;
       sheet.classList.remove("no-transition");
 
-      // If sheet is open and user swiped DOWN on empty spot, close it (low threshold).
-      // This is the behavior you asked for: swipe down on open space closes.
       if (sheetOpen && dragDy > 35){
         closeSheet();
       } else if (!sheetOpen && dragDy < -35){
-        // If collapsed and user swiped UP, open
         openSheet();
       } else {
-        // Otherwise snap to nearest (for mild drags)
         const midpoint = (closedY * 0.5);
         if (currentY < midpoint) openSheet();
         else closeSheet();
@@ -782,8 +979,6 @@
 
       modalOverlay.classList.add("show");
       modalOverlay.setAttribute("aria-hidden", "false");
-
-      // focus tag
       setTimeout(() => tagInput.focus(), 0);
     }
 
@@ -793,10 +988,17 @@
     }
 
     function resetAfterStop(){
-      // reset timer text after modal action
       timerEl.textContent = "00:00.00";
+      earningsFloat.textContent = formatMoney(0);
+
       pendingMs = 0;
       pendingDisplay = "00:00.00";
+      pendingClockIn = "";
+      pendingClockOut = "";
+      pendingDate = "";
+      pendingWhenISO = "";
+      pendingAmount = 0;
+      startAtWall = null;
     }
 
     tagInput.addEventListener("input", () => {
@@ -808,7 +1010,6 @@
       resetAfterStop();
     });
 
-    // Click outside modal closes (treat as cancel)
     modalOverlay.addEventListener("click", (e) => {
       if (e.target === modalOverlay){
         closeSaveModal();
@@ -821,22 +1022,22 @@
       if (!tag) return;
 
       const notes = notesInput.value || "";
-      const when = new Date();
 
       history.unshift({
-        ms: pendingMs,
-        display: pendingDisplay,
-        whenISO: when.toISOString(),
+        duration: pendingDisplay,
+        clockIn: pendingClockIn,
+        clockOut: pendingClockOut,
+        date: pendingDate,
+        whenISO: pendingWhenISO,
         tag,
-        notes
+        notes,
+        amount: pendingAmount
       });
 
       saveHistory();
       renderHistory();
       closeSaveModal();
       resetAfterStop();
-
-      // Bring attention to saved item
       openSheet();
     });
 
@@ -847,7 +1048,7 @@
     window.addEventListener("resize", measureSheet);
 
     closeSheet();
-    renderHistory();
+    renderHistory(); // also renders total
   </script>
 </body>
 </html>
