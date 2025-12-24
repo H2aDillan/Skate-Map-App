@@ -12,7 +12,6 @@
       --red:#ff2a2a;
       --text:#eaeaea;
 
-      --sheetRadius:22px;
       --sheetPeek:64px;
       --sheetH:70vh;
 
@@ -152,6 +151,7 @@
       font-variant-numeric: tabular-nums;
       letter-spacing:0.2px;
       text-align:center;
+      touch-action: manipulation;
     }
 
     .rate-input:focus{
@@ -247,6 +247,7 @@
         transform 120ms ease;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .action-btn:active{ transform:scale(0.98); }
@@ -393,6 +394,8 @@
       padding:12px 12px;
       border-radius:16px;
       background:rgba(255,255,255,0.06);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .history-left{
@@ -465,7 +468,7 @@
     }
 
     /* =========================
-       Coming soon page
+       Pages
        ========================= */
     .page{
       position:fixed;
@@ -498,6 +501,7 @@
       cursor:pointer;
       -webkit-tap-highlight-color: transparent;
       transition: transform 120ms ease;
+      touch-action: manipulation;
     }
     .back-btn:active{ transform:scale(0.97); }
 
@@ -509,20 +513,781 @@
     }
     .page-body{
       flex:1;
-      display:grid;
-      place-items:center;
-      padding:24px;
-      text-align:center;
-    }
-    .coming{
-      font-size:22px;
-      font-weight:900;
-      letter-spacing:1px;
-      opacity:0.9;
+      overflow:auto;
+      padding:18px 14px 22px;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* =========================
-       Stop modal + settings modal
+       Stats UI
+       ========================= */
+    .stats-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding-top: 6px;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+
+    .stats-card{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      overflow:hidden;
+    }
+
+    .stats-card.full{ grid-column: 1 / -1; }
+
+    .stats-card-head{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .stats-card-title{
+      font-weight:900;
+      letter-spacing:0.7px;
+      font-size:13px;
+      opacity:0.95;
+      text-transform: uppercase;
+    }
+
+    .stats-card-sub{
+      font-size:12px;
+      opacity:0.70;
+      line-height:1.25;
+    }
+
+    .stats-big{
+      font-variant-numeric: tabular-nums;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:0.5px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .stats-mini{
+      font-size:12px;
+      opacity:0.75;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .pie-row{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+    }
+
+    .pie-wrap{
+      position:relative;
+      width:160px;
+      min-width:160px;
+      aspect-ratio: 1 / 1;
+      border-radius:18px;
+      background:rgba(0,0,0,0.22);
+      border:1px solid rgba(255,255,255,0.08);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+    }
+
+    canvas#tagPie{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    .pie-center{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      text-align:center;
+    }
+
+    .pie-center .center-num{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      font-size:16px;
+      letter-spacing:0.6px;
+      text-shadow: 0 0 18px rgba(255,255,255,0.10);
+    }
+    .pie-center .center-sub{
+      font-size:11px;
+      opacity:0.70;
+      margin-top:4px;
+      letter-spacing:0.5px;
+    }
+
+    .legend{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:8px 8px;
+      border-radius:18px;
+      background:rgba(0,0,0,0.16);
+      border:1px solid rgba(255,255,255,0.08);
+      overflow:auto;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .legend-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      flex:1;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      box-shadow: 0 0 18px rgba(255,255,255,0.12);
+      flex:0 0 auto;
+    }
+
+    .legend-tag{
+      font-weight:900;
+      letter-spacing:0.3px;
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+      opacity:0.92;
+    }
+
+    .legend-right{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.78;
+      white-space:nowrap;
+    }
+
+    .tag-table{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .tag-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.16);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .tag-row-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      flex:1;
+    }
+
+    .tag-row-name{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+
+    .tag-row-title{
+      font-weight:900;
+      letter-spacing:0.3px;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+
+    .tag-row-sub{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.72;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+
+    .tag-row-amount{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:13px;
+      color:rgba(0,255,76,0.92);
+      white-space:nowrap;
+      text-shadow: 0 0 18px rgba(0,255,76,0.12);
+    }
+
+    .empty-stats{
+      padding:14px 12px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.03);
+      opacity:0.8;
+      line-height:1.35;
+      font-size:13px;
+    }
+
+    @media (max-width: 380px){
+      .pie-row{ flex-direction:column; }
+      .pie-wrap{ width:100%; min-width:unset; aspect-ratio: 16 / 10; }
+    }
+
+    /* =========================
+       Predictions UI
+       ========================= */
+    .pred-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .pred-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.16);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .pred-left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+      flex:1;
+    }
+
+    .pred-title{
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .pred-sub{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.72;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .pred-amount{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      letter-spacing:0.4px;
+      font-size:13px;
+      color:rgba(0,255,76,0.92);
+      white-space:nowrap;
+      text-shadow: 0 0 18px rgba(0,255,76,0.12);
+      align-self:center;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.4px;
+      opacity:0.92;
+      white-space:nowrap;
+      width:max-content;
+      max-width:100%;
+    }
+
+    .chip .chip-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:rgba(0,255,76,0.92);
+      box-shadow: 0 0 18px rgba(0,255,76,0.14);
+      flex:0 0 auto;
+    }
+
+    .chip.warn .chip-dot{
+      background:rgba(255,42,42,0.92);
+      box-shadow: 0 0 18px rgba(255,42,42,0.14);
+    }
+
+    .two-col{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    /* =========================
+       Goals UI
+       ========================= */
+    .goals-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding-top: 8px;
+    }
+
+    .goal-card{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .goal-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .goal-title{
+      font-weight:900;
+      letter-spacing:0.7px;
+      font-size:13px;
+      opacity:0.95;
+      text-transform: uppercase;
+    }
+
+    .goal-meta{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.75;
+      white-space:nowrap;
+    }
+
+    .goal-input-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .goal-target-pill{
+      flex:1;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+      color:rgba(255,255,255,0.92);
+      padding:12px 12px;
+      font-size:14px;
+      font-weight:900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing:0.2px;
+      text-align:left;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      user-select:none;
+      touch-action: manipulation;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+    }
+    .goal-target-pill:active{ transform:scale(0.995); }
+    .goal-target-pill:hover{
+      background:rgba(255,255,255,0.08);
+      border-color:rgba(255,255,255,0.16);
+    }
+    .goal-target-pill .pill-right{
+      font-size:12px;
+      opacity:0.65;
+      white-space:nowrap;
+    }
+
+    .goal-progress{
+      height:14px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.08);
+      overflow:hidden;
+      position:relative;
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    .goal-fill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background: linear-gradient(90deg,
+        rgba(0,255,76,0.55),
+        rgba(0,255,76,0.95),
+        rgba(0,255,76,0.55)
+      );
+      background-size: 200% 100%;
+      animation: liquid 1200ms linear infinite;
+      box-shadow: 0 0 18px rgba(0,255,76,0.15);
+      transition: width 160ms ease;
+      will-change: width;
+    }
+
+    @keyframes liquid{
+      0%{ background-position: 0% 0%; }
+      100%{ background-position: 200% 0%; }
+    }
+
+    .goal-bottom{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .goal-left{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.85;
+      white-space:nowrap;
+    }
+
+    .goal-right{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.7;
+      white-space:nowrap;
+    }
+
+    /* =========================
+       Calendar UI (NEW)
+       ========================= */
+    .cal-wrap{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding-top: 6px;
+    }
+
+    .cal-topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .cal-month{
+      font-weight:900;
+      letter-spacing:0.7px;
+      font-size:14px;
+      opacity:0.94;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .cal-nav{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .icon-btn{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.04);
+      color:rgba(255,255,255,0.9);
+      font-weight:900;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+      touch-action: manipulation;
+      display:grid;
+      place-items:center;
+    }
+    .icon-btn:active{ transform:scale(0.97); }
+    .icon-btn:hover{ background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.18); }
+
+    .cal-grid{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.04);
+      overflow:hidden;
+    }
+
+    .cal-dow{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.16);
+    }
+    .cal-dow div{
+      padding:10px 0;
+      text-align:center;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:0.6px;
+      opacity:0.75;
+    }
+
+    .cal-days{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:0;
+    }
+
+    .cal-day{
+      position:relative;
+      min-height:58px;
+      padding:10px 8px 8px;
+      border-right:1px solid rgba(255,255,255,0.06);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      background:transparent;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 140ms ease, transform 120ms ease;
+      user-select:none;
+    }
+    .cal-day:nth-child(7n){ border-right:none; }
+    .cal-day:active{ transform:scale(0.99); }
+
+    .cal-day.muted{
+      opacity:0.38;
+    }
+    .cal-day:hover{
+      background:rgba(255,255,255,0.04);
+    }
+
+    .cal-day.selected{
+      background:rgba(0,255,76,0.08);
+      outline:1px solid rgba(0,255,76,0.20);
+      outline-offset:-1px;
+    }
+
+    .cal-day.today::after{
+      content:"";
+      position:absolute;
+      top:9px;
+      right:10px;
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background:rgba(0,191,255,0.95);
+      box-shadow: 0 0 18px rgba(0,191,255,0.18);
+      opacity:0.95;
+    }
+
+    .cal-num{
+      font-variant-numeric: tabular-nums;
+      font-weight:900;
+      font-size:12px;
+      opacity:0.92;
+    }
+
+    .cal-dots{
+      position:absolute;
+      left:8px;
+      right:8px;
+      bottom:8px;
+      display:flex;
+      gap:4px;
+      justify-content:flex-start;
+      align-items:center;
+      min-height:10px;
+    }
+    .cal-dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.25);
+    }
+    .cal-dot.on{
+      background:rgba(0,255,76,0.92);
+      box-shadow: 0 0 14px rgba(0,255,76,0.14);
+    }
+
+    .cal-section{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px;
+      padding:14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .cal-section-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .cal-section-title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:0;
+    }
+
+    .cal-title{
+      font-weight:900;
+      letter-spacing:0.7px;
+      font-size:13px;
+      opacity:0.95;
+      text-transform: uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .cal-sub{
+      font-size:12px;
+      opacity:0.70;
+      line-height:1.25;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .add-btn{
+      height:44px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,76,0.28);
+      background:rgba(0,255,76,0.12);
+      color:rgba(0,255,76,0.96);
+      font-weight:900;
+      letter-spacing:0.6px;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+      touch-action: manipulation;
+      white-space:nowrap;
+    }
+    .add-btn:active{ transform:scale(0.99); }
+    .add-btn:hover{ background:rgba(0,255,76,0.16); border-color:rgba(0,255,76,0.36); }
+
+    .cal-list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .cal-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.16);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .cal-left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+      flex:1;
+    }
+
+    .cal-job{
+      font-weight:900;
+      letter-spacing:0.3px;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+      opacity:0.95;
+    }
+
+    .cal-time{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      opacity:0.75;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .cal-notes{
+      font-size:12px;
+      opacity:0.72;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:100%;
+    }
+
+    .del-btn{
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.04);
+      color:rgba(255,255,255,0.88);
+      font-weight:900;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, background 180ms ease;
+      touch-action: manipulation;
+      flex:0 0 auto;
+      display:grid;
+      place-items:center;
+    }
+    .del-btn:active{ transform:scale(0.97); }
+    .del-btn:hover{ background:rgba(255,42,42,0.10); border-color:rgba(255,42,42,0.18); }
+
+    /* =========================
+       Modals
        ========================= */
     .modal-overlay{
       position:fixed;
@@ -611,6 +1376,12 @@
       padding:12px 12px;
       outline:none;
       font-size:14px;
+      touch-action: manipulation;
+    }
+
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(0,255,76,0.35);
+      box-shadow: 0 0 0 3px rgba(0,255,76,0.10);
     }
 
     textarea{
@@ -636,6 +1407,7 @@
       cursor:pointer;
       -webkit-tap-highlight-color: transparent;
       transition: transform 120ms ease, background 180ms ease, box-shadow 180ms ease;
+      touch-action: manipulation;
     }
     .btn:active{ transform:scale(0.98); }
 
@@ -647,6 +1419,11 @@
       background:rgba(0,255,76,0.92);
       color:#001a08;
       box-shadow: 0 0 18px rgba(0,255,76,0.18);
+    }
+    .btn-danger{
+      background:rgba(255,42,42,0.92);
+      color:#240000;
+      box-shadow: 0 0 18px rgba(255,42,42,0.18);
     }
 
     /* =========================
@@ -708,9 +1485,36 @@
       cursor:pointer;
       -webkit-tap-highlight-color: transparent;
       transition: transform 120ms ease, background 180ms ease, border-color 180ms ease;
+      touch-action: manipulation;
     }
     .menu-item:active{ transform:scale(0.99); }
     .menu-item:hover{ background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.16); }
+
+    /* GOALS menu item: remove background frame */
+    .menu-item.menu-goals{
+      background:transparent;
+      border:none;
+      padding:10px 10px;
+      border-radius:10px;
+      opacity:0.92;
+    }
+    .menu-item.menu-goals:hover{
+      background:rgba(255,255,255,0.06);
+      border:none;
+    }
+
+    /* PREDICTION menu item: remove background frame (requested) */
+    .menu-item.menu-prediction{
+      background:transparent;
+      border:none;
+      padding:10px 10px;
+      border-radius:10px;
+      opacity:0.92;
+    }
+    .menu-item.menu-prediction:hover{
+      background:rgba(255,255,255,0.06);
+      border:none;
+    }
 
     .menu-spacer{ flex:1; }
 
@@ -727,6 +1531,7 @@
       box-shadow: 0 0 18px rgba(0,191,255,0.18);
       transition: transform 120ms ease, box-shadow 180ms ease, background 180ms ease;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .settings-btn:active{ transform:scale(0.99); }
 
@@ -772,6 +1577,7 @@
       flex:0 0 auto;
       transition: background 180ms ease, border-color 180ms ease;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     .toggle::after{
       content:"";
@@ -799,6 +1605,7 @@
       .timer-wrap, .earnings-float, .action-btn, .overlay, .sheet,
       .modal-overlay, .menu-overlay, .menu-drawer, .page { transition:none; }
       .toggle::after{ transition:none; }
+      .goal-fill{ animation:none; }
     }
   </style>
 </head>
@@ -840,7 +1647,9 @@
   <aside class="menu-drawer" id="menuDrawer" aria-label="Menu">
     <div class="menu-title">MENU</div>
 
-    <button class="menu-item" id="goalsBtn" type="button">GOALS</button>
+    <button class="menu-item menu-goals" id="goalsBtn" type="button">GOALS</button>
+    <button class="menu-item menu-prediction" id="predictionBtn" type="button">PREDICTION</button>
+    <button class="menu-item" id="calendarBtn" type="button">CALENDAR</button>
 
     <div class="menu-spacer"></div>
 
@@ -865,6 +1674,8 @@
     <div class="sheet-body" id="sheetBody">
       <div class="hint" id="emptyHint">
         Stopped timers will appear here. Swipe down on empty space to close, tap outside to close, or tap the HISTORY bar.
+        <br><br>
+        Tip: Long-press a saved tag to delete it.
       </div>
       <div class="history-list" id="historyList"></div>
     </div>
@@ -895,6 +1706,32 @@
       <div class="modal-actions">
         <button class="btn btn-ghost" id="cancelBtn" type="button">CANCEL</button>
         <button class="btn btn-save" id="saveBtn" type="button">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirmation modal (history) -->
+  <div class="modal-overlay" id="deleteOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Delete tag">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2>Delete Tag?</h2>
+          <div class="modal-sub" id="deleteSub">This will remove it from history.</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>SELECTED</label>
+          <div id="deleteDetails" style="padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);font-size:13px;line-height:1.35;">
+            —
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="deleteCancelBtn" type="button">CANCEL</button>
+        <button class="btn btn-danger" id="deleteConfirmBtn" type="button">DELETE</button>
       </div>
     </div>
   </div>
@@ -936,26 +1773,279 @@
     </div>
   </div>
 
-  <!-- Coming soon pages -->
-  <section class="page" id="statsPage" aria-label="Stats (coming soon)">
+  <!-- Set Goal modal -->
+  <div class="modal-overlay" id="goalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Set goal">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2 id="goalTitle">Set Goal</h2>
+          <div class="modal-sub" id="goalSub">Enter your target amount</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="goalAmountInput">GOAL AMOUNT</label>
+          <input id="goalAmountInput" type="text" inputmode="decimal" placeholder="$250.00" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="goalCancelBtn" type="button">CANCEL</button>
+        <button class="btn btn-save" id="goalSaveBtn" type="button">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar: Add Job modal (NEW) -->
+  <div class="modal-overlay" id="jobOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Add job">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2>Add Work Job</h2>
+          <div class="modal-sub" id="jobSub">Schedule a job you need to do.</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="jobTitleInput">JOB NAME</label>
+          <input id="jobTitleInput" type="text" placeholder="e.g. Field Spray - Block A" maxlength="60" />
+        </div>
+
+        <div class="field">
+          <label for="jobDateInput">DATE</label>
+          <input id="jobDateInput" type="date" />
+        </div>
+
+        <div class="field" style="display:flex;flex-direction:row;gap:10px;">
+          <div class="field" style="flex:1;">
+            <label for="jobStartInput">START TIME</label>
+            <input id="jobStartInput" type="time" />
+          </div>
+          <div class="field" style="flex:1;">
+            <label for="jobEndInput">END TIME</label>
+            <input id="jobEndInput" type="time" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="jobNotesInput">NOTES (OPTIONAL)</label>
+          <textarea id="jobNotesInput" placeholder="Add details (optional)"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="jobCancelBtn" type="button">CANCEL</button>
+        <button class="btn btn-save" id="jobSaveBtn" type="button">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar: Delete Job modal (NEW) -->
+  <div class="modal-overlay" id="jobDeleteOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Delete job">
+      <div class="modal-head">
+        <div class="modal-title">
+          <h2>Delete Job?</h2>
+          <div class="modal-sub" id="jobDeleteSub">This will remove it from your calendar.</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>SELECTED</label>
+          <div id="jobDeleteDetails" style="padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);font-size:13px;line-height:1.35;">
+            —
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="jobDeleteCancelBtn" type="button">CANCEL</button>
+        <button class="btn btn-danger" id="jobDeleteConfirmBtn" type="button">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats page -->
+  <section class="page" id="statsPage" aria-label="Stats">
     <div class="page-top">
       <button class="back-btn" id="statsBack" type="button" aria-label="Back">←</button>
       <div class="page-title">STATS</div>
       <div style="width:44px;height:44px;"></div>
     </div>
+
     <div class="page-body">
-      <div class="coming">COMING SOON</div>
+      <div class="stats-wrap">
+        <div class="stats-grid">
+          <div class="stats-card">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Total Sessions</div>
+              <div class="stats-card-sub">All saved tags (including “No Tag”)</div>
+            </div>
+            <div class="stats-big" id="statSessions">0</div>
+            <div class="stats-mini" id="statSessionsMini">No data yet</div>
+          </div>
+
+          <div class="stats-card">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Total Earned</div>
+              <div class="stats-card-sub">Sum of amounts saved in history</div>
+            </div>
+            <div class="stats-big" id="statTotalEarned">$0.00</div>
+            <div class="stats-mini" id="statTotalEarnedMini">—</div>
+          </div>
+
+          <div class="stats-card">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Most Used Tag</div>
+              <div class="stats-card-sub">Highest session count</div>
+            </div>
+            <div class="stats-big" id="statMostTag">—</div>
+            <div class="stats-mini" id="statMostTagMini">—</div>
+          </div>
+
+          <div class="stats-card">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Least Used Tag</div>
+              <div class="stats-card-sub">Lowest session count</div>
+            </div>
+            <div class="stats-big" id="statLeastTag">—</div>
+            <div class="stats-mini" id="statLeastTagMini">—</div>
+          </div>
+
+          <div class="stats-card full" id="statsPieCard">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Tag Usage</div>
+              <div class="stats-card-sub">Pie chart shows how often each tag was used (by session count).</div>
+            </div>
+
+            <div class="pie-row">
+              <div class="pie-wrap">
+                <canvas id="tagPie"></canvas>
+                <div class="pie-center">
+                  <div>
+                    <div class="center-num" id="pieCenterNum">0</div>
+                    <div class="center-sub">SESSIONS</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="legend" id="tagLegend"></div>
+            </div>
+          </div>
+
+          <div class="stats-card full" id="statsTableCard">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Tag Totals</div>
+              <div class="stats-card-sub">Rounded up per tag: session count + total amount earned (includes “No Tag”).</div>
+            </div>
+            <div class="tag-table" id="tagTable"></div>
+          </div>
+
+          <div class="empty-stats" id="statsEmpty" style="display:none;">
+            No saved tags yet. Stop a timer to create history, then come back here.
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="page" id="goalsPage" aria-label="Goals (coming soon)">
+  <!-- Predictions page -->
+  <section class="page" id="predictionPage" aria-label="Prediction">
+    <div class="page-top">
+      <button class="back-btn" id="predictionBack" type="button" aria-label="Back">←</button>
+      <div class="page-title">PREDICTION</div>
+      <div style="width:44px;height:44px;"></div>
+    </div>
+
+    <div class="page-body">
+      <div class="stats-wrap">
+        <div class="stats-grid">
+          <div class="stats-card full">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Model</div>
+              <div class="stats-card-sub">
+                Projections are based on your saved history pace. Forecasts are capped to <span id="predCapDate">Dec 31</span>.
+              </div>
+            </div>
+            <div class="two-col" id="predChips"></div>
+          </div>
+
+          <div class="stats-card full">
+            <div class="stats-card-head">
+              <div class="stats-card-title">Potential Earnings</div>
+              <div class="stats-card-sub" id="predSubtitle">—</div>
+            </div>
+            <div class="pred-list" id="predList"></div>
+          </div>
+
+          <div class="stats-card full" id="predEmpty" style="display:none;">
+            <div class="stats-card-head">
+              <div class="stats-card-title">No Data</div>
+              <div class="stats-card-sub">Stop a timer at least once to generate a forecast.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendar page (NEW) -->
+  <section class="page" id="calendarPage" aria-label="Calendar">
+    <div class="page-top">
+      <button class="back-btn" id="calendarBack" type="button" aria-label="Back">←</button>
+      <div class="page-title">CALENDAR</div>
+      <div style="width:44px;height:44px;"></div>
+    </div>
+
+    <div class="page-body">
+      <div class="cal-wrap">
+        <div class="cal-topbar">
+          <div class="cal-month" id="calMonthLabel">—</div>
+          <div class="cal-nav">
+            <button class="icon-btn" id="calPrev" type="button" aria-label="Previous month">‹</button>
+            <button class="icon-btn" id="calToday" type="button" aria-label="Go to today">•</button>
+            <button class="icon-btn" id="calNext" type="button" aria-label="Next month">›</button>
+          </div>
+        </div>
+
+        <div class="cal-grid">
+          <div class="cal-dow">
+            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div>
+          </div>
+          <div class="cal-days" id="calDays"></div>
+        </div>
+
+        <div class="cal-section">
+          <div class="cal-section-head">
+            <div class="cal-section-title">
+              <div class="cal-title" id="calSelectedTitle">Scheduled Jobs</div>
+              <div class="cal-sub" id="calSelectedSub">—</div>
+            </div>
+            <button class="add-btn" id="calAddBtn" type="button">+ ADD</button>
+          </div>
+
+          <div class="cal-list" id="calList"></div>
+          <div class="hint" id="calEmptyHint" style="padding:8px 6px;margin:0;">
+            No jobs on this date. Tap <b>ADD</b> to schedule a work job.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Goals page -->
+  <section class="page" id="goalsPage" aria-label="Goals">
     <div class="page-top">
       <button class="back-btn" id="goalsBack" type="button" aria-label="Back">←</button>
       <div class="page-title">GOALS</div>
       <div style="width:44px;height:44px;"></div>
     </div>
+
     <div class="page-body">
-      <div class="coming">COMING SOON</div>
+      <div class="goals-wrap" id="goalsWrap"></div>
     </div>
   </section>
 
@@ -967,6 +2057,10 @@
     const RATE_KEY = "hourly_rate_v1";
     const CURR_KEY = "currency_symbol_v1";
     const POPUP_KEY = "tag_popup_enabled_v1";
+    const GOALS_KEY = "goals_targets_v4";
+
+    // Calendar storage (NEW)
+    const CAL_KEY = "calendar_jobs_v1";
 
     function loadHistory(){
       try{
@@ -1011,11 +2105,51 @@
       try{ localStorage.setItem(POPUP_KEY, v ? "true" : "false"); } catch {}
     }
 
+    function loadGoals(){
+      const defaults = { daily: 0, weekly: 0, biweekly: 0, monthly: 0, yearly: 0 };
+      try{
+        const raw = localStorage.getItem(GOALS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!parsed || typeof parsed !== "object") return defaults;
+        return {
+          daily:   Number.isFinite(Number(parsed.daily))   ? Number(parsed.daily)   : defaults.daily,
+          weekly:  Number.isFinite(Number(parsed.weekly))  ? Number(parsed.weekly)  : defaults.weekly,
+          biweekly:Number.isFinite(Number(parsed.biweekly))? Number(parsed.biweekly): defaults.biweekly,
+          monthly: Number.isFinite(Number(parsed.monthly)) ? Number(parsed.monthly) : defaults.monthly,
+          yearly:  Number.isFinite(Number(parsed.yearly))  ? Number(parsed.yearly)  : defaults.yearly
+        };
+      } catch {
+        return defaults;
+      }
+    }
+    function saveGoals(obj){
+      try{ localStorage.setItem(GOALS_KEY, JSON.stringify(obj)); } catch {}
+    }
+
+    // Calendar storage helpers (NEW)
+    function loadCalendar(){
+      try{
+        const raw = localStorage.getItem(CAL_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+    function saveCalendar(){
+      try{ localStorage.setItem(CAL_KEY, JSON.stringify(calendarJobs)); } catch {}
+    }
+
     // ==========================
     // Global settings state
     // ==========================
     let currencySymbol = loadCurrency();
     let tagPopupEnabled = loadPopupEnabled();
+    let goalsTargets = loadGoals();
+
+    // Calendar state (NEW)
+    let calendarJobs = loadCalendar();
+    let calMonth = new Date();              // current month view
+    calMonth.setDate(1); calMonth.setHours(0,0,0,0);
+    let calSelectedKey = toDateKey(new Date());
 
     // ==========================
     // Money helpers
@@ -1028,6 +2162,42 @@
       return hours * rate;
     }
 
+    function parseMoneyInput(raw){
+      const s = String(raw ?? "").trim();
+      if (!s) return 0;
+      const cleaned = s.replace(/[^\d.]/g, "");
+      if (!cleaned) return 0;
+      const parts = cleaned.split(".");
+      const normalized = parts.length <= 2 ? cleaned : (parts[0] + "." + parts.slice(1).join(""));
+      const n = Number(normalized);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    }
+
+    function moneyToInput(n){
+      const v = Number(n);
+      if (!Number.isFinite(v)) return "";
+      return (Math.round(v * 100) / 100).toFixed(2);
+    }
+
+    function safeTagName(tag){
+      const t = (tag ?? "").toString().trim();
+      return t ? t : "No Tag";
+    }
+
+    // Deterministic color per tag
+    function hashStr(s){
+      let h = 2166136261;
+      for (let i=0;i<s.length;i++){
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return (h >>> 0);
+    }
+    function tagColor(tag){
+      const h = hashStr(tag) % 360;
+      return `hsl(${h} 82% 58%)`;
+    }
+
     // ==========================
     // Menu drawer behavior
     // ==========================
@@ -1036,6 +2206,8 @@
     const menuDrawer = document.getElementById("menuDrawer");
     const settingsBtn = document.getElementById("settingsBtn");
     const goalsBtn = document.getElementById("goalsBtn");
+    const predictionBtn = document.getElementById("predictionBtn");
+    const calendarBtn = document.getElementById("calendarBtn");
 
     function openMenu(){
       menuDrawer.classList.add("open");
@@ -1055,7 +2227,7 @@
     menuOverlay.addEventListener("click", closeMenu);
 
     // ==========================
-    // Coming soon pages
+    // Pages
     // ==========================
     const statsBtn = document.getElementById("statsBtn");
     const statsPage = document.getElementById("statsPage");
@@ -1064,11 +2236,22 @@
     const goalsPage = document.getElementById("goalsPage");
     const goalsBack = document.getElementById("goalsBack");
 
+    const predictionPage = document.getElementById("predictionPage");
+    const predictionBack = document.getElementById("predictionBack");
+
+    const calendarPage = document.getElementById("calendarPage");
+    const calendarBack = document.getElementById("calendarBack");
+
     function openPage(pageEl){
       closeMenu();
       closeSettings();
       closeSheet();
       pageEl.classList.add("show");
+
+      if (pageEl === goalsPage) renderGoalsUI();
+      if (pageEl === statsPage) renderStats();
+      if (pageEl === predictionPage) renderPrediction();
+      if (pageEl === calendarPage) renderCalendar();
     }
     function closePage(pageEl){
       pageEl.classList.remove("show");
@@ -1079,6 +2262,12 @@
 
     goalsBtn.addEventListener("click", () => openPage(goalsPage));
     goalsBack.addEventListener("click", () => closePage(goalsPage));
+
+    predictionBtn.addEventListener("click", () => openPage(predictionPage));
+    predictionBack.addEventListener("click", () => closePage(predictionPage));
+
+    calendarBtn.addEventListener("click", () => openPage(calendarPage));
+    calendarBack.addEventListener("click", () => closePage(calendarPage));
 
     // ==========================
     // Settings modal behavior
@@ -1119,6 +2308,12 @@
       saveCurrency(currencySymbol);
 
       renderHistory();
+      updateGoalsProgressLive();
+      refreshGoalsPills();
+      renderStats();
+      renderPrediction();
+      renderCalendarList(); // currency not used here, but keeps UI fresh
+
       if (running) {
         const elapsed = performance.now() - startAtPerf;
         earningsFloat.textContent = formatMoney(calcEarnings(elapsed, hourlyRate));
@@ -1158,6 +2353,7 @@
     rateInput.addEventListener("input", () => {
       hourlyRate = getRate();
       saveRate(hourlyRate);
+      updateGoalsProgressLive();
     });
 
     // ==========================
@@ -1171,6 +2367,9 @@
     let startAtPerf = 0;
     let startAtWall = null;
     let rafId = null;
+
+    // Goals progress is NOT synced with history. Only current session.
+    let goalsSessionAmount = 0;
 
     // pending stop data
     let pendingDisplay = "00:00.00";
@@ -1203,16 +2402,31 @@
       return d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
     }
 
+    function getLiveSessionAmount(){
+      if (!running) return 0;
+      const elapsed = performance.now() - startAtPerf;
+      return calcEarnings(elapsed, hourlyRate);
+    }
+
     function tick(now){
       const elapsed = now - startAtPerf;
+      const liveAmt = calcEarnings(elapsed, hourlyRate);
+
       timerEl.textContent = formatTime(elapsed);
-      earningsFloat.textContent = formatMoney(calcEarnings(elapsed, hourlyRate));
+      earningsFloat.textContent = formatMoney(liveAmt);
+
+      goalsSessionAmount = liveAmt;
+      updateGoalsProgressLive();
+
       rafId = requestAnimationFrame(tick);
     }
 
     function start(){
       hourlyRate = getRate();
       saveRate(hourlyRate);
+
+      goalsSessionAmount = 0;
+      updateGoalsProgressLive();
 
       running = true;
       control.classList.add("running");
@@ -1238,6 +2452,9 @@
       pendingWhenISO = stopWall.toISOString();
       pendingAmount = calcEarnings(elapsed, hourlyRate);
 
+      goalsSessionAmount = pendingAmount;
+      updateGoalsProgressLive();
+
       running = false;
       control.classList.remove("running");
       btn.textContent = "START";
@@ -1248,7 +2465,7 @@
     }
 
     function commitStopToHistory(tag, notes){
-      const safeTag = (tag && String(tag).trim()) ? String(tag).trim() : "No Tag";
+      const safeTag = safeTagName(tag);
       const safeNotes = (notes && String(notes).trim()) ? String(notes) : "";
 
       history.unshift({
@@ -1264,8 +2481,10 @@
 
       saveHistory();
       renderHistory();
+      renderStats();
+      renderPrediction();
+
       resetAfterStop();
-      // IMPORTANT: do NOT auto-open history sheet anymore
     }
 
     btn.addEventListener("click", () => {
@@ -1320,7 +2539,7 @@
 
         const tagHeader = document.createElement("div");
         tagHeader.className = "tag-header";
-        tagHeader.textContent = (item.tag || "No Tag").trim() || "No Tag";
+        tagHeader.textContent = safeTagName(item.tag);
 
         const durationLine = document.createElement("div");
         durationLine.className = "duration-line";
@@ -1353,6 +2572,9 @@
 
         row.appendChild(left);
         row.appendChild(amountEl);
+
+        attachLongPressDelete(row, i);
+
         historyList.appendChild(row);
       }
 
@@ -1383,6 +2605,9 @@
 
       currentY = sheetOpen ? openY : closedY;
       setSheetY(currentY, true);
+
+      renderStats();
+      renderPrediction();
     }
 
     function setSheetY(y, immediate=false){
@@ -1402,24 +2627,13 @@
       }
     }
 
-    function openSheet(){
-      sheetOpen = true;
-      setSheetY(openY, false);
-    }
-
-    function closeSheet(){
-      sheetOpen = false;
-      setSheetY(closedY, false);
-    }
-
-    function toggleSheet(){
-      sheetOpen ? closeSheet() : openSheet();
-    }
+    function openSheet(){ sheetOpen = true; setSheetY(openY, false); }
+    function closeSheet(){ sheetOpen = false; setSheetY(closedY, false); }
+    function toggleSheet(){ sheetOpen ? closeSheet() : openSheet(); }
 
     overlay.addEventListener("click", () => closeSheet());
     sheetHeader.addEventListener("click", () => toggleSheet());
 
-    // Dragging / swipe down close on empty spot
     let dragging = false;
     let dragStartY = 0;
     let startSheetY = 0;
@@ -1508,6 +2722,9 @@
       pendingWhenISO = "";
       pendingAmount = 0;
       startAtWall = null;
+
+      goalsSessionAmount = 0;
+      updateGoalsProgressLive();
     }
 
     cancelBtn.addEventListener("click", () => {
@@ -1530,18 +2747,1079 @@
     });
 
     // ==========================
+    // Delete modal behavior (history)
+    // ==========================
+    const deleteOverlay = document.getElementById("deleteOverlay");
+    const deleteDetails = document.getElementById("deleteDetails");
+    const deleteCancelBtn = document.getElementById("deleteCancelBtn");
+    const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
+    let pendingDeleteIndex = null;
+
+    function openDeleteModal(index){
+      if (index == null || index < 0 || index >= history.length) return;
+      pendingDeleteIndex = index;
+
+      const item = history[index];
+      const tag = safeTagName(item.tag);
+      const amt = Number.isFinite(Number(item.amount)) ? formatMoney(Number(item.amount)) : formatMoney(0);
+
+      deleteDetails.innerHTML =
+        `<div style="font-weight:900;letter-spacing:0.4px;margin-bottom:6px;">${escapeHtml(tag)}</div>` +
+        `<div style="opacity:0.8;font-variant-numeric:tabular-nums;">${escapeHtml(item.duration || "00:00.00")} · ${escapeHtml(amt)}</div>` +
+        `<div style="opacity:0.65;margin-top:6px;">${escapeHtml((item.clockIn && item.clockOut) ? (item.clockIn + " - " + item.clockOut) : "")}</div>` +
+        `<div style="opacity:0.65;">${escapeHtml(item.date || "")}</div>`;
+
+      deleteOverlay.classList.add("show");
+      deleteOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDeleteModal(){
+      pendingDeleteIndex = null;
+      deleteOverlay.classList.remove("show");
+      deleteOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    deleteCancelBtn.addEventListener("click", closeDeleteModal);
+    deleteOverlay.addEventListener("click", (e) => {
+      if (e.target === deleteOverlay) closeDeleteModal();
+    });
+
+    deleteConfirmBtn.addEventListener("click", () => {
+      if (pendingDeleteIndex == null) return;
+      history.splice(pendingDeleteIndex, 1);
+      saveHistory();
+      renderHistory();
+      renderStats();
+      renderPrediction();
+      closeDeleteModal();
+    });
+
+    function escapeHtml(str){
+      return String(str || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function attachLongPressDelete(el, index){
+      let t = null;
+      let startX = 0, startY = 0;
+
+      const clear = () => {
+        if (t) clearTimeout(t);
+        t = null;
+      };
+
+      el.addEventListener("pointerdown", (e) => {
+        startX = e.clientX;
+        startY = e.clientY;
+
+        clear();
+        t = setTimeout(() => {
+          clear();
+          openDeleteModal(index);
+        }, 520);
+      });
+
+      el.addEventListener("pointermove", (e) => {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > 8 || dy > 8) clear();
+      });
+
+      el.addEventListener("pointerup", clear);
+      el.addEventListener("pointercancel", clear);
+    }
+
+    // ==========================
+    // Goals (manual entry)
+    // ==========================
+    const goalsWrap = document.getElementById("goalsWrap");
+
+    const GOAL_DEFS = [
+      { key:"daily",    label:"Daily Goal" },
+      { key:"weekly",   label:"Weekly Goal" },
+      { key:"biweekly", label:"Biweekly Goal" },
+      { key:"monthly",  label:"Monthly Goal" },
+      { key:"yearly",   label:"Yearly Goal" }
+    ];
+
+    function getGoalsProgress(){
+      return running ? getLiveSessionAmount() : goalsSessionAmount;
+    }
+
+    function renderGoalsUI(){
+      goalsWrap.innerHTML = "";
+
+      for (const def of GOAL_DEFS){
+        const card = document.createElement("div");
+        card.className = "goal-card";
+        card.dataset.goalKey = def.key;
+
+        const top = document.createElement("div");
+        top.className = "goal-top";
+
+        const left = document.createElement("div");
+        left.style.display = "flex";
+        left.style.flexDirection = "column";
+        left.style.gap = "6px";
+        left.style.minWidth = "0";
+
+        const title = document.createElement("div");
+        title.className = "goal-title";
+        title.textContent = def.label;
+
+        const meta = document.createElement("div");
+        meta.className = "goal-meta";
+        meta.textContent = running ? "Updating live…" : "Tap to set your goal";
+
+        left.appendChild(title);
+        left.appendChild(meta);
+        top.appendChild(left);
+
+        const inputRow = document.createElement("div");
+        inputRow.className = "goal-input-row";
+
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "goal-target-pill";
+        pill.dataset.goalKey = def.key;
+
+        const targetVal = Number(goalsTargets[def.key]) || 0;
+        const pillLeft = document.createElement("div");
+        pillLeft.textContent = targetVal > 0 ? formatMoney(targetVal) : "Set your goal";
+        pillLeft.style.whiteSpace = "nowrap";
+        pillLeft.style.overflow = "hidden";
+        pillLeft.style.textOverflow = "ellipsis";
+
+        const pillRight = document.createElement("div");
+        pillRight.className = "pill-right";
+        pillRight.textContent = "EDIT";
+
+        pill.appendChild(pillLeft);
+        pill.appendChild(pillRight);
+
+        pill.addEventListener("click", () => openGoalModal(def.key, def.label));
+
+        inputRow.appendChild(pill);
+
+        const progress = document.createElement("div");
+        progress.className = "goal-progress";
+
+        const fill = document.createElement("div");
+        fill.className = "goal-fill";
+        fill.style.width = "0%";
+
+        progress.appendChild(fill);
+
+        const bottom = document.createElement("div");
+        bottom.className = "goal-bottom";
+
+        const bottomLeft = document.createElement("div");
+        bottomLeft.className = "goal-left";
+        bottomLeft.textContent = `${formatMoney(0)} / ${formatMoney(targetVal)}`;
+
+        const bottomRight = document.createElement("div");
+        bottomRight.className = "goal-right";
+        bottomRight.textContent = "0%";
+
+        bottom.appendChild(bottomLeft);
+        bottom.appendChild(bottomRight);
+
+        card.appendChild(top);
+        card.appendChild(inputRow);
+        card.appendChild(progress);
+        card.appendChild(bottom);
+
+        card._meta = meta;
+        card._fill = fill;
+        card._bl = bottomLeft;
+        card._br = bottomRight;
+        card._def = def;
+        card._pillLeft = pillLeft;
+
+        goalsWrap.appendChild(card);
+      }
+
+      updateGoalsProgressLive();
+    }
+
+    function refreshGoalsPills(){
+      const cards = goalsWrap ? goalsWrap.children : [];
+      if (!cards || !cards.length) return;
+
+      for (const card of cards){
+        const def = card._def;
+        if (!def) continue;
+
+        const target = Number(goalsTargets[def.key]) || 0;
+        card._pillLeft.textContent = target > 0 ? formatMoney(target) : "Set your goal";
+      }
+    }
+
+    function updateGoalsProgressLive(){
+      const cards = goalsWrap ? goalsWrap.children : [];
+      if (!cards || !cards.length) return;
+
+      const current = getGoalsProgress();
+
+      for (const card of cards){
+        const def = card._def;
+        if (!def) continue;
+
+        const target = Number(goalsTargets[def.key]) || 0;
+
+        let pct = 0;
+        if (target > 0) pct = Math.max(0, Math.min(1, current / target));
+
+        const pctText = Math.round(pct * 100);
+        card._fill.style.width = (pct * 100).toFixed(1) + "%";
+        card._bl.textContent = `${formatMoney(current)} / ${formatMoney(target)}`;
+        card._br.textContent = `${pctText}%`;
+        card._meta.textContent = running ? "Updating live…" : "Tap to set your goal";
+      }
+    }
+
+    // Goal modal
+    const goalOverlay = document.getElementById("goalOverlay");
+    const goalTitle = document.getElementById("goalTitle");
+    const goalSub = document.getElementById("goalSub");
+    const goalAmountInput = document.getElementById("goalAmountInput");
+    const goalCancelBtn = document.getElementById("goalCancelBtn");
+    const goalSaveBtn = document.getElementById("goalSaveBtn");
+    let activeGoalKey = null;
+
+    function openGoalModal(key, label){
+      activeGoalKey = key;
+
+      goalTitle.textContent = label;
+      goalSub.textContent = "Enter your target amount";
+      goalAmountInput.placeholder = `${currencySymbol}250.00`;
+
+      const current = Number(goalsTargets[key]) || 0;
+      goalAmountInput.value = current > 0 ? moneyToInput(current) : "";
+
+      goalOverlay.classList.add("show");
+      goalOverlay.setAttribute("aria-hidden", "false");
+      setTimeout(() => goalAmountInput.focus(), 0);
+    }
+
+    function closeGoalModal(){
+      activeGoalKey = null;
+      goalOverlay.classList.remove("show");
+      goalOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    goalCancelBtn.addEventListener("click", closeGoalModal);
+    goalOverlay.addEventListener("click", (e) => {
+      if (e.target === goalOverlay) closeGoalModal();
+    });
+
+    goalSaveBtn.addEventListener("click", () => {
+      if (!activeGoalKey) return;
+
+      const v = parseMoneyInput(goalAmountInput.value);
+      goalsTargets[activeGoalKey] = v;
+      saveGoals(goalsTargets);
+
+      refreshGoalsPills();
+      updateGoalsProgressLive();
+
+      closeGoalModal();
+    });
+
+    // ==========================
+    // STATS
+    // ==========================
+    const statSessions = document.getElementById("statSessions");
+    const statSessionsMini = document.getElementById("statSessionsMini");
+    const statTotalEarned = document.getElementById("statTotalEarned");
+    const statTotalEarnedMini = document.getElementById("statTotalEarnedMini");
+    const statMostTag = document.getElementById("statMostTag");
+    const statMostTagMini = document.getElementById("statMostTagMini");
+    const statLeastTag = document.getElementById("statLeastTag");
+    const statLeastTagMini = document.getElementById("statLeastTagMini");
+    const statsEmpty = document.getElementById("statsEmpty");
+
+    const tagLegend = document.getElementById("tagLegend");
+    const tagTable = document.getElementById("tagTable");
+    const pieCenterNum = document.getElementById("pieCenterNum");
+
+    const pieCanvas = document.getElementById("tagPie");
+    const pieCtx = pieCanvas.getContext("2d");
+
+    function computeTagStats(){
+      const map = new Map(); // tag => { tag, count, amount }
+      let totalEarned = 0;
+
+      for (const item of history){
+        const tag = safeTagName(item.tag);
+        const amt = Number(item.amount);
+        const safeAmt = Number.isFinite(amt) ? amt : 0;
+
+        totalEarned += safeAmt;
+
+        if (!map.has(tag)) map.set(tag, { tag, count: 0, amount: 0 });
+        const obj = map.get(tag);
+        obj.count += 1;
+        obj.amount += safeAmt;
+      }
+
+      const arr = Array.from(map.values());
+      arr.sort((a,b) => (b.count - a.count) || (b.amount - a.amount) || a.tag.localeCompare(b.tag));
+
+      return { arr, totalEarned, totalSessions: history.length };
+    }
+
+    function drawPie(statsArr){
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const rect = pieCanvas.getBoundingClientRect();
+      const w = Math.max(10, Math.floor(rect.width));
+      const h = Math.max(10, Math.floor(rect.height));
+
+      pieCanvas.width = Math.floor(w * dpr);
+      pieCanvas.height = Math.floor(h * dpr);
+
+      pieCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      pieCtx.clearRect(0, 0, w, h);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) * 0.36;
+      const ring = Math.min(w, h) * 0.44;
+
+      pieCtx.beginPath();
+      pieCtx.arc(cx, cy, ring, 0, Math.PI * 2);
+      pieCtx.fillStyle = "rgba(255,255,255,0.04)";
+      pieCtx.fill();
+
+      const total = statsArr.reduce((s,x) => s + x.count, 0);
+      if (total <= 0) return;
+
+      let start = -Math.PI / 2;
+
+      for (const s of statsArr){
+        const frac = s.count / total;
+        const end = start + frac * Math.PI * 2;
+
+        pieCtx.beginPath();
+        pieCtx.moveTo(cx, cy);
+        pieCtx.arc(cx, cy, ring, start, end);
+        pieCtx.closePath();
+        pieCtx.fillStyle = tagColor(s.tag);
+        pieCtx.globalAlpha = 0.95;
+        pieCtx.fill();
+
+        pieCtx.globalAlpha = 1;
+        pieCtx.strokeStyle = "rgba(0,0,0,0.35)";
+        pieCtx.lineWidth = 1;
+        pieCtx.stroke();
+
+        start = end;
+      }
+
+      pieCtx.beginPath();
+      pieCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      pieCtx.fillStyle = "rgba(0,0,0,0.92)";
+      pieCtx.fill();
+
+      pieCtx.strokeStyle = "rgba(255,255,255,0.10)";
+      pieCtx.lineWidth = 1;
+      pieCtx.stroke();
+    }
+
+    function renderLegend(statsArr){
+      tagLegend.innerHTML = "";
+
+      if (!statsArr.length){
+        tagLegend.innerHTML = `<div class="hint" style="margin:0;padding:8px 6px;">No tags yet.</div>`;
+        return;
+      }
+
+      const total = statsArr.reduce((s,x) => s + x.count, 0);
+
+      for (const s of statsArr){
+        const row = document.createElement("div");
+        row.className = "legend-item";
+
+        const left = document.createElement("div");
+        left.className = "legend-left";
+
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        dot.style.background = tagColor(s.tag);
+
+        const name = document.createElement("div");
+        name.className = "legend-tag";
+        name.textContent = s.tag;
+
+        left.appendChild(dot);
+        left.appendChild(name);
+
+        const right = document.createElement("div");
+        right.className = "legend-right";
+        const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
+        right.textContent = `${s.count} • ${pct}%`;
+
+        row.appendChild(left);
+        row.appendChild(right);
+
+        tagLegend.appendChild(row);
+      }
+    }
+
+    function renderTagTable(statsArr){
+      tagTable.innerHTML = "";
+
+      if (!statsArr.length){
+        tagTable.innerHTML = `<div class="hint" style="margin:0;padding:8px 6px;">No tags yet.</div>`;
+        return;
+      }
+
+      for (const s of statsArr){
+        const row = document.createElement("div");
+        row.className = "tag-row";
+
+        const left = document.createElement("div");
+        left.className = "tag-row-left";
+
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        dot.style.background = tagColor(s.tag);
+
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "tag-row-name";
+
+        const title = document.createElement("div");
+        title.className = "tag-row-title";
+        title.textContent = s.tag;
+
+        const sub = document.createElement("div");
+        sub.className = "tag-row-sub";
+        sub.textContent = `${s.count} session${s.count === 1 ? "" : "s"}`;
+
+        nameWrap.appendChild(title);
+        nameWrap.appendChild(sub);
+
+        left.appendChild(dot);
+        left.appendChild(nameWrap);
+
+        const amt = document.createElement("div");
+        amt.className = "tag-row-amount";
+        amt.textContent = formatMoney(s.amount);
+
+        row.appendChild(left);
+        row.appendChild(amt);
+
+        tagTable.appendChild(row);
+      }
+    }
+
+    function renderStats(){
+      const { arr, totalEarned, totalSessions } = computeTagStats();
+
+      const showEmpty = totalSessions === 0;
+      statsEmpty.style.display = showEmpty ? "block" : "none";
+
+      statSessions.textContent = String(totalSessions);
+      statSessionsMini.textContent = showEmpty ? "No data yet" : "Based on saved history";
+
+      statTotalEarned.textContent = formatMoney(totalEarned);
+      statTotalEarnedMini.textContent = showEmpty ? "—" : "History total across all tags";
+
+      pieCenterNum.textContent = String(totalSessions);
+
+      if (!arr.length){
+        statMostTag.textContent = "—";
+        statMostTagMini.textContent = "—";
+        statLeastTag.textContent = "—";
+        statLeastTagMini.textContent = "—";
+        drawPie([]);
+        renderLegend([]);
+        renderTagTable([]);
+        return;
+      }
+
+      const most = arr[0];
+      const least = arr[arr.length - 1];
+
+      statMostTag.textContent = most.tag;
+      statMostTagMini.textContent = `${most.count} session${most.count === 1 ? "" : "s"} • ${formatMoney(most.amount)}`;
+
+      statLeastTag.textContent = least.tag;
+      statLeastTagMini.textContent = `${least.count} session${least.count === 1 ? "" : "s"} • ${formatMoney(least.amount)}`;
+
+      drawPie(arr);
+      renderLegend(arr);
+      renderTagTable(arr);
+    }
+
+    // ==========================
+    // PREDICTIONS
+    // ==========================
+    const predCapDate = document.getElementById("predCapDate");
+    const predChips = document.getElementById("predChips");
+    const predSubtitle = document.getElementById("predSubtitle");
+    const predList = document.getElementById("predList");
+    const predEmpty = document.getElementById("predEmpty");
+
+    function startOfDay(d){
+      const x = new Date(d);
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    function addDays(d, days){
+      const x = new Date(d);
+      x.setDate(x.getDate() + days);
+      return x;
+    }
+
+    function daysInclusive(start, end){
+      const a = startOfDay(start).getTime();
+      const b = startOfDay(end).getTime();
+      if (b < a) return 0;
+      return Math.floor((b - a) / 86400000) + 1;
+    }
+
+    function fmtShortDate(d){
+      return d.toLocaleDateString(undefined, { day:"2-digit", month:"short" });
+    }
+
+    function fmtLongDate(d){
+      return d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    function buildDayTotalsInWindow(windowDays, now){
+      const endDay = startOfDay(now);
+      const startDay = addDays(endDay, -(windowDays - 1));
+
+      const map = new Map(); // dayKey => total
+      for (const item of history){
+        if (!item.whenISO) continue;
+        const dt = new Date(item.whenISO);
+        if (Number.isNaN(dt.getTime())) continue;
+
+        const day = startOfDay(dt);
+        if (day < startDay || day > endDay) continue;
+
+        const key = day.toISOString().slice(0,10);
+        const amt = Number(item.amount);
+        const safeAmt = Number.isFinite(amt) ? amt : 0;
+        map.set(key, (map.get(key) || 0) + safeAmt);
+      }
+
+      let total = 0;
+      let activeDays = 0;
+      for (let i = 0; i < windowDays; i++){
+        const day = addDays(startDay, i);
+        const key = day.toISOString().slice(0,10);
+        const v = map.get(key) || 0;
+        total += v;
+        if (v > 0) activeDays += 1;
+      }
+
+      const avgPerDay = windowDays > 0 ? total / windowDays : 0;
+      return { windowDays, total, activeDays, avgPerDay };
+    }
+
+    function buildAllTimeWindow(now){
+      if (!history.length) return { windowDays: 0, total: 0, activeDays: 0, avgPerDay: 0 };
+
+      let min = null;
+      for (const item of history){
+        if (!item.whenISO) continue;
+        const dt = new Date(item.whenISO);
+        if (Number.isNaN(dt.getTime())) continue;
+        const day = startOfDay(dt);
+        if (!min || day < min) min = day;
+      }
+      if (!min) return { windowDays: 0, total: 0, activeDays: 0, avgPerDay: 0 };
+
+      const endDay = startOfDay(now);
+      let span = daysInclusive(min, endDay);
+      if (span <= 0) span = 1;
+
+      const cap = Math.min(span, 365);
+      return buildDayTotalsInWindow(cap, now);
+    }
+
+    function blendAverages(w7, w30, wall){
+      const have7  = w7.windowDays > 0;
+      const have30 = w30.windowDays > 0;
+      const haveA  = wall.windowDays > 0;
+
+      let a = 0, b = 0, c = 0;
+      let sumW = 0;
+
+      if (have7){  a = 0.50; sumW += a; }
+      if (have30){ b = 0.30; sumW += b; }
+      if (haveA){  c = 0.20; sumW += c; }
+
+      if (sumW <= 0) return { avg: 0, weights: {a:0,b:0,c:0} };
+
+      a /= sumW; b /= sumW; c /= sumW;
+
+      const avg = (w7.avgPerDay * a) + (w30.avgPerDay * b) + (wall.avgPerDay * c);
+      return { avg, weights: { a, b, c } };
+    }
+
+    function calcYearEnd(now){
+      const y = now.getFullYear();
+      const end = new Date(y, 11, 31, 23, 59, 59, 999);
+      return end;
+    }
+
+    function endOfMonth(now){
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      return new Date(y, m + 1, 0, 23, 59, 59, 999);
+    }
+
+    function clipEndDate(desiredEnd, yearEnd){
+      return desiredEnd > yearEnd ? yearEnd : desiredEnd;
+    }
+
+    function chip(text, ok=true){
+      const c = document.createElement("div");
+      c.className = ok ? "chip" : "chip warn";
+      const dot = document.createElement("div");
+      dot.className = "chip-dot";
+      const t = document.createElement("div");
+      t.textContent = text;
+      c.appendChild(dot);
+      c.appendChild(t);
+      return c;
+    }
+
+    function renderPrediction(){
+      predList.innerHTML = "";
+      predChips.innerHTML = "";
+      predEmpty.style.display = history.length ? "none" : "block";
+
+      const now = new Date();
+      const yearEnd = calcYearEnd(now);
+      predCapDate.textContent = fmtLongDate(yearEnd);
+
+      if (!history.length){
+        predSubtitle.textContent = "—";
+        return;
+      }
+
+      const w7 = buildDayTotalsInWindow(7, now);
+      const w30 = buildDayTotalsInWindow(30, now);
+      const wall = buildAllTimeWindow(now);
+
+      const blended = blendAverages(w7, w30, wall);
+      const avgPerDay = blended.avg;
+
+      const avgPerActiveDay30 = w30.activeDays > 0 ? (w30.total / w30.activeDays) : 0;
+      const activeRate30 = 30 > 0 ? (w30.activeDays / 30) : 0;
+      const trend = (w30.avgPerDay > 0) ? ((w7.avgPerDay - w30.avgPerDay) / w30.avgPerDay) : 0;
+
+      predChips.appendChild(chip(`Avg / day (blended): ${formatMoney(avgPerDay)}`, avgPerDay > 0));
+      predChips.appendChild(chip(`30d active days: ${w30.activeDays}/30`, w30.activeDays > 0));
+      predChips.appendChild(chip(`Avg on work day (30d): ${formatMoney(avgPerActiveDay30)}`, avgPerActiveDay30 > 0));
+      predChips.appendChild(chip(`Work frequency (30d): ${Math.round(activeRate30 * 100)}%`, true));
+
+      const trendPct = Math.round(trend * 100);
+      if (Number.isFinite(trend) && Math.abs(trendPct) >= 5){
+        const up = trendPct > 0;
+        predChips.appendChild(chip(`Trend vs 30d: ${up ? "+" : ""}${trendPct}%`, up));
+      } else {
+        predChips.appendChild(chip(`Trend vs 30d: stable`, true));
+      }
+
+      const today = startOfDay(now);
+      const yearEndDay = startOfDay(yearEnd);
+      const daysToYearEnd = daysInclusive(today, yearEndDay);
+
+      predSubtitle.textContent =
+        `Forecast window: ${fmtLongDate(today)} → ${fmtLongDate(yearEndDay)} (${daysToYearEnd} day${daysToYearEnd === 1 ? "" : "s"})`;
+
+      const periods = [];
+      periods.push({ name: "Daily", start: today, end: clipEndDate(today, yearEndDay) });
+      periods.push({ name: "Weekly", start: today, end: clipEndDate(addDays(today, 6), yearEndDay) });
+      periods.push({ name: "Biweekly", start: today, end: clipEndDate(addDays(today, 13), yearEndDay) });
+      periods.push({ name: "Monthly", start: today, end: clipEndDate(startOfDay(endOfMonth(now)), yearEndDay) });
+      periods.push({ name: "Year (to Dec 31)", start: today, end: yearEndDay });
+
+      for (const p of periods){
+        const days = daysInclusive(p.start, p.end);
+        const amount = avgPerDay * days;
+
+        const row = document.createElement("div");
+        row.className = "pred-row";
+
+        const left = document.createElement("div");
+        left.className = "pred-left";
+
+        const title = document.createElement("div");
+        title.className = "pred-title";
+        title.textContent = p.name;
+
+        const sub = document.createElement("div");
+        sub.className = "pred-sub";
+        sub.textContent = `${fmtShortDate(p.start)} → ${fmtShortDate(p.end)} • ${days} day${days === 1 ? "" : "s"}`;
+
+        left.appendChild(title);
+        left.appendChild(sub);
+
+        const amt = document.createElement("div");
+        amt.className = "pred-amount";
+        amt.textContent = formatMoney(amount);
+
+        row.appendChild(left);
+        row.appendChild(amt);
+
+        predList.appendChild(row);
+      }
+    }
+
+    // ==========================
+    // Calendar helpers (NEW)
+    // ==========================
+    function pad2(n){ return String(n).padStart(2, "0"); }
+
+    function toDateKey(d){
+      const x = new Date(d);
+      x.setHours(0,0,0,0);
+      return `${x.getFullYear()}-${pad2(x.getMonth()+1)}-${pad2(x.getDate())}`;
+    }
+
+    function fromDateKey(key){
+      const [y,m,dd] = String(key).split("-").map(Number);
+      const d = new Date(y, (m||1)-1, dd||1);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    function monthLabel(d){
+      return d.toLocaleDateString(undefined, { month:"long", year:"numeric" }).toUpperCase();
+    }
+
+    function dowMon0(jsDay){
+      // JS: Sun=0..Sat=6  -> Mon=0..Sun=6
+      return (jsDay + 6) % 7;
+    }
+
+    function getJobsForKey(key){
+      return calendarJobs
+        .filter(j => j.dateKey === key)
+        .sort((a,b) => (a.startTime || "").localeCompare(b.startTime || "") || (a.createdAt || "").localeCompare(b.createdAt || ""));
+    }
+
+    function countJobsForKey(key){
+      let c = 0;
+      for (const j of calendarJobs) if (j.dateKey === key) c++;
+      return c;
+    }
+
+    function formatKeyNice(key){
+      const d = fromDateKey(key);
+      return d.toLocaleDateString(undefined, { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
+    }
+
+    // ==========================
+    // Calendar UI (NEW)
+    // ==========================
+    const calMonthLabel = document.getElementById("calMonthLabel");
+    const calDaysEl = document.getElementById("calDays");
+    const calPrev = document.getElementById("calPrev");
+    const calNext = document.getElementById("calNext");
+    const calToday = document.getElementById("calToday");
+    const calAddBtn = document.getElementById("calAddBtn");
+    const calList = document.getElementById("calList");
+    const calEmptyHint = document.getElementById("calEmptyHint");
+    const calSelectedTitle = document.getElementById("calSelectedTitle");
+    const calSelectedSub = document.getElementById("calSelectedSub");
+
+    function renderCalendar(){
+      calMonthLabel.textContent = monthLabel(calMonth);
+      renderCalendarGrid();
+      renderCalendarList();
+    }
+
+    function renderCalendarGrid(){
+      calDaysEl.innerHTML = "";
+
+      const year = calMonth.getFullYear();
+      const month = calMonth.getMonth();
+
+      const first = new Date(year, month, 1);
+      const firstDow = dowMon0(first.getDay());
+
+      const start = new Date(year, month, 1 - firstDow);
+      start.setHours(0,0,0,0);
+
+      const todayKey = toDateKey(new Date());
+      const selectedKey = calSelectedKey;
+
+      for (let i = 0; i < 42; i++){
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        d.setHours(0,0,0,0);
+
+        const key = toDateKey(d);
+        const inMonth = d.getMonth() === month;
+
+        const cell = document.createElement("div");
+        cell.className = "cal-day";
+        if (!inMonth) cell.classList.add("muted");
+        if (key === todayKey) cell.classList.add("today");
+        if (key === selectedKey) cell.classList.add("selected");
+
+        const num = document.createElement("div");
+        num.className = "cal-num";
+        num.textContent = String(d.getDate());
+
+        const dots = document.createElement("div");
+        dots.className = "cal-dots";
+
+        const c = countJobsForKey(key);
+        const dotCount = Math.min(3, c);
+        for (let k = 0; k < 3; k++){
+          const dot = document.createElement("div");
+          dot.className = "cal-dot" + (k < dotCount ? " on" : "");
+          dots.appendChild(dot);
+        }
+
+        cell.appendChild(num);
+        cell.appendChild(dots);
+
+        cell.addEventListener("click", () => {
+          calSelectedKey = key;
+          renderCalendar();
+        });
+
+        calDaysEl.appendChild(cell);
+      }
+    }
+
+    function renderCalendarList(){
+      calList.innerHTML = "";
+
+      const jobs = getJobsForKey(calSelectedKey);
+
+      calSelectedTitle.textContent = "Scheduled Jobs";
+      calSelectedSub.textContent = `${formatKeyNice(calSelectedKey)} • ${jobs.length} job${jobs.length === 1 ? "" : "s"}`;
+
+      if (!jobs.length){
+        calEmptyHint.style.display = "block";
+        return;
+      }
+      calEmptyHint.style.display = "none";
+
+      for (const job of jobs){
+        const row = document.createElement("div");
+        row.className = "cal-item";
+
+        const left = document.createElement("div");
+        left.className = "cal-left";
+
+        const title = document.createElement("div");
+        title.className = "cal-job";
+        title.textContent = job.title || "Work Job";
+
+        const time = document.createElement("div");
+        time.className = "cal-time";
+        const st = (job.startTime || "").trim();
+        const et = (job.endTime || "").trim();
+        time.textContent = (st && et) ? `${st} - ${et}` : (st ? `Starts ${st}` : (et ? `Ends ${et}` : "Time not set"));
+
+        const notes = document.createElement("div");
+        notes.className = "cal-notes";
+        notes.textContent = (job.notes || "").trim();
+
+        left.appendChild(title);
+        left.appendChild(time);
+        if (notes.textContent) left.appendChild(notes);
+
+        const del = document.createElement("button");
+        del.className = "del-btn";
+        del.type = "button";
+        del.textContent = "×";
+        del.setAttribute("aria-label", "Delete job");
+        del.addEventListener("click", () => openJobDeleteModal(job.id));
+
+        row.appendChild(left);
+        row.appendChild(del);
+
+        calList.appendChild(row);
+      }
+    }
+
+    calPrev.addEventListener("click", () => {
+      calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1);
+      calMonth.setHours(0,0,0,0);
+      renderCalendar();
+    });
+
+    calNext.addEventListener("click", () => {
+      calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1);
+      calMonth.setHours(0,0,0,0);
+      renderCalendar();
+    });
+
+    calToday.addEventListener("click", () => {
+      const t = new Date();
+      calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+      calMonth.setHours(0,0,0,0);
+      calSelectedKey = toDateKey(t);
+      renderCalendar();
+    });
+
+    calAddBtn.addEventListener("click", () => openJobModalForKey(calSelectedKey));
+
+    // ==========================
+    // Calendar: Add Job modal (NEW)
+    // ==========================
+    const jobOverlay = document.getElementById("jobOverlay");
+    const jobSub = document.getElementById("jobSub");
+    const jobTitleInput = document.getElementById("jobTitleInput");
+    const jobDateInput = document.getElementById("jobDateInput");
+    const jobStartInput = document.getElementById("jobStartInput");
+    const jobEndInput = document.getElementById("jobEndInput");
+    const jobNotesInput = document.getElementById("jobNotesInput");
+    const jobCancelBtn = document.getElementById("jobCancelBtn");
+    const jobSaveBtn = document.getElementById("jobSaveBtn");
+
+    function openJobModalForKey(key){
+      const nice = formatKeyNice(key);
+      jobSub.textContent = `Scheduling for ${nice}`;
+
+      jobTitleInput.value = "";
+      jobDateInput.value = key;
+      jobStartInput.value = "";
+      jobEndInput.value = "";
+      jobNotesInput.value = "";
+
+      jobOverlay.classList.add("show");
+      jobOverlay.setAttribute("aria-hidden", "false");
+      setTimeout(() => jobTitleInput.focus(), 0);
+    }
+
+    function closeJobModal(){
+      jobOverlay.classList.remove("show");
+      jobOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    jobCancelBtn.addEventListener("click", closeJobModal);
+    jobOverlay.addEventListener("click", (e) => {
+      if (e.target === jobOverlay) closeJobModal();
+    });
+
+    function makeId(){
+      return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+    }
+
+    jobSaveBtn.addEventListener("click", () => {
+      const title = (jobTitleInput.value || "").trim() || "Work Job";
+      const dateKey = (jobDateInput.value || "").trim() || calSelectedKey;
+      const startTime = (jobStartInput.value || "").trim();
+      const endTime = (jobEndInput.value || "").trim();
+      const notes = (jobNotesInput.value || "").trim();
+
+      // Simple sanity: if both times exist and end < start, swap (keeps it idiot-proof)
+      let st = startTime, et = endTime;
+      if (st && et && et < st){
+        const tmp = st; st = et; et = tmp;
+      }
+
+      calendarJobs.push({
+        id: makeId(),
+        title,
+        dateKey,
+        startTime: st,
+        endTime: et,
+        notes,
+        createdAt: new Date().toISOString()
+      });
+
+      saveCalendar();
+
+      // Keep selected date on the saved date
+      calSelectedKey = dateKey;
+      const d = fromDateKey(dateKey);
+      calMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+      calMonth.setHours(0,0,0,0);
+
+      closeJobModal();
+      renderCalendar();
+    });
+
+    // ==========================
+    // Calendar: Delete Job modal (NEW)
+    // ==========================
+    const jobDeleteOverlay = document.getElementById("jobDeleteOverlay");
+    const jobDeleteDetails = document.getElementById("jobDeleteDetails");
+    const jobDeleteCancelBtn = document.getElementById("jobDeleteCancelBtn");
+    const jobDeleteConfirmBtn = document.getElementById("jobDeleteConfirmBtn");
+    let pendingJobDeleteId = null;
+
+    function openJobDeleteModal(id){
+      const job = calendarJobs.find(j => j.id === id);
+      if (!job) return;
+
+      pendingJobDeleteId = id;
+
+      const timeLine = (job.startTime && job.endTime) ? `${job.startTime} - ${job.endTime}` :
+                       (job.startTime ? `Starts ${job.startTime}` : (job.endTime ? `Ends ${job.endTime}` : `Time not set`));
+
+      jobDeleteDetails.innerHTML =
+        `<div style="font-weight:900;letter-spacing:0.4px;margin-bottom:6px;">${escapeHtml(job.title || "Work Job")}</div>` +
+        `<div style="opacity:0.8;font-variant-numeric:tabular-nums;">${escapeHtml(formatKeyNice(job.dateKey))}</div>` +
+        `<div style="opacity:0.7;margin-top:6px;">${escapeHtml(timeLine)}</div>` +
+        (job.notes ? `<div style="opacity:0.7;margin-top:6px;">${escapeHtml(job.notes)}</div>` : "");
+
+      jobDeleteOverlay.classList.add("show");
+      jobDeleteOverlay.setAttribute("aria-hidden", "false");
+    }
+
+    function closeJobDeleteModal(){
+      pendingJobDeleteId = null;
+      jobDeleteOverlay.classList.remove("show");
+      jobDeleteOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    jobDeleteCancelBtn.addEventListener("click", closeJobDeleteModal);
+    jobDeleteOverlay.addEventListener("click", (e) => {
+      if (e.target === jobDeleteOverlay) closeJobDeleteModal();
+    });
+
+    jobDeleteConfirmBtn.addEventListener("click", () => {
+      if (!pendingJobDeleteId) return;
+      calendarJobs = calendarJobs.filter(j => j.id !== pendingJobDeleteId);
+      saveCalendar();
+      closeJobDeleteModal();
+      renderCalendar();
+    });
+
+    // ==========================
     // Init
     // ==========================
     function init(){
       earningsFloat.textContent = formatMoney(0);
       renderHistory();
+      renderStats();
+      renderPrediction();
+
       measureSheet();
       closeSheet();
 
-      // reflect stored settings
       currencySelect.value = currencySymbol;
-      popupToggle.classList.toggle("on", tagPopupEnabled);
-      popupToggle.setAttribute("aria-checked", tagPopupEnabled ? "true" : "false");
+      applyToggleUI();
+
+      goalsSessionAmount = 0;
+      updateGoalsProgressLive();
+
+      // Calendar initial snap to current month/selected day
+      const t = new Date();
+      calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+      calMonth.setHours(0,0,0,0);
+      calSelectedKey = toDateKey(t);
     }
 
     window.addEventListener("resize", measureSheet);
