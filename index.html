@@ -10,6 +10,7 @@
       --bg:#000;
       --green:#00ff4c;
       --red:#ff2a2a;
+      --orange:#ff9a22;
       --text:#eaeaea;
 
       --sheetPeek:64px;
@@ -228,6 +229,16 @@
       transform:translate(-50%, 0);
     }
 
+    /* === TIMER BACK TO "BEFORE BREAK" BEHAVIOR ===
+       Break row is ABSOLUTE and does NOT affect the timer/button layout width/position.
+    */
+    .btn-stack{
+      position:relative;
+      width:180px;
+      height:64px; /* only the main button counts for layout (like before break) */
+      flex: 0 0 auto;
+    }
+
     .action-btn{
       width:180px;
       height:64px;
@@ -264,6 +275,96 @@
       box-shadow:
         0 0 18px rgba(255,42,42,0.28),
         0 0 44px rgba(255,42,42,0.16);
+    }
+
+    /* Break row slides DOWN 0.5s after STOP appears
+       Absolute so it doesn't push/shift timer like before.
+       Break timer must slide out to the LEFT of the button WITHOUT moving the button.
+    */
+    .break-row{
+      position:absolute;
+      top: calc(64px + 10px);
+      left: 50%;
+      transform: translate(-50%, -12px);
+
+      width:180px;
+      height:64px;
+
+      opacity:0;
+      pointer-events:none;
+      transition: opacity 220ms ease, transform 280ms ease;
+      will-change: transform, opacity;
+      overflow: visible; /* allow left timer to extend outside */
+    }
+
+    .running .break-row{
+      opacity:1;
+      pointer-events:auto;
+      transform: translate(-50%, 0);
+      transition: opacity 220ms ease 500ms, transform 280ms ease 500ms; /* 0.5s delay */
+    }
+
+    .break-btn{
+      width:180px;
+      height:64px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-weight:900;
+      letter-spacing:1px;
+      color:#201000;
+      background:var(--orange);
+      box-shadow:
+        0 0 18px rgba(255,154,34,0.22),
+        0 0 44px rgba(255,154,34,0.14);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: transform 120ms ease, background 180ms ease, box-shadow 180ms ease;
+      position:relative;
+      z-index:2; /* stay above timer if overlapping */
+    }
+    .break-btn:active{ transform: scale(0.985); }
+
+    /* Break active = STOP BREAK (red) */
+    .onbreak .break-btn{
+      background:var(--red);
+      color:#250000;
+      box-shadow:
+        0 0 18px rgba(255,42,42,0.28),
+        0 0 44px rgba(255,42,42,0.16);
+    }
+
+    /* Break timer slides out to the LEFT of the break button (button stays fixed) */
+    .break-timer{
+      position:absolute;
+      top:50%;
+      right: calc(100% + 10px); /* sit to the LEFT of the button */
+      transform: translate(12px, -50%); /* start slightly tucked in */
+      font-variant-numeric: tabular-nums;
+      letter-spacing:0.6px;
+      font-size:22px;
+      font-weight:900;
+      white-space:nowrap;
+      user-select:none;
+      color: rgba(255,154,34,0.95);
+      text-shadow:
+        0 0 18px rgba(255,154,34,0.22),
+        0 0 44px rgba(255,154,34,0.12);
+
+      opacity:0;
+      max-width:0;
+      overflow:hidden;
+      transition: opacity 220ms ease, max-width 260ms ease, transform 260ms ease;
+      will-change: opacity, transform, max-width;
+      z-index:1;
+      pointer-events:none; /* can't block button taps */
+    }
+
+    .onbreak .break-timer{
+      opacity:1;
+      max-width:220px;
+      transform: translate(0, -50%);
     }
 
     /* =========================
@@ -425,6 +526,21 @@
       opacity:0.95;
       white-space:nowrap;
       line-height:1.15;
+    }
+
+    .break-line{
+      font-variant-numeric: tabular-nums;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:0.3px;
+      color: rgba(255,154,34,0.92);
+      text-shadow: 0 0 18px rgba(255,154,34,0.12);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 78vw;
+      line-height:1.15;
+      opacity:0.95;
     }
 
     .clock-line{
@@ -997,7 +1113,7 @@
     }
 
     /* =========================
-       Calendar UI (NEW)
+       Calendar UI
        ========================= */
     .cal-wrap{
       display:flex;
@@ -1503,7 +1619,7 @@
       border:none;
     }
 
-    /* PREDICTION menu item: remove background frame (requested) */
+    /* PREDICTION menu item: remove background frame */
     .menu-item.menu-prediction{
       background:transparent;
       border:none;
@@ -1603,7 +1719,8 @@
 
     @media (prefers-reduced-motion: reduce){
       .timer-wrap, .earnings-float, .action-btn, .overlay, .sheet,
-      .modal-overlay, .menu-overlay, .menu-drawer, .page { transition:none; }
+      .modal-overlay, .menu-overlay, .menu-drawer, .page,
+      .break-row, .break-timer { transition:none; }
       .toggle::after{ transition:none; }
       .goal-fill{ animation:none; }
     }
@@ -1638,7 +1755,16 @@
         <div class="timer" id="timer">00:00.00</div>
       </div>
 
-      <button class="action-btn" id="actionBtn" type="button">START</button>
+      <!-- Timer/button layout stays exactly like before break.
+           Break row is absolute and doesn't shift this layout. -->
+      <div class="btn-stack" aria-label="Controls">
+        <button class="action-btn" id="actionBtn" type="button">START</button>
+
+        <div class="break-row" id="breakRow" aria-hidden="true">
+          <button class="break-btn" id="breakBtn" type="button">BREAK</button>
+          <div class="break-timer" id="breakTimer">00:00.00</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1797,7 +1923,7 @@
     </div>
   </div>
 
-  <!-- Calendar: Add Job modal (NEW) -->
+  <!-- Calendar: Add Job modal -->
   <div class="modal-overlay" id="jobOverlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Add job">
       <div class="modal-head">
@@ -1842,7 +1968,7 @@
     </div>
   </div>
 
-  <!-- Calendar: Delete Job modal (NEW) -->
+  <!-- Calendar: Delete Job modal -->
   <div class="modal-overlay" id="jobDeleteOverlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Delete job">
       <div class="modal-head">
@@ -1992,7 +2118,7 @@
     </div>
   </section>
 
-  <!-- Calendar page (NEW) -->
+  <!-- Calendar page -->
   <section class="page" id="calendarPage" aria-label="Calendar">
     <div class="page-top">
       <button class="back-btn" id="calendarBack" type="button" aria-label="Back">←</button>
@@ -2051,6 +2177,17 @@
 
   <script>
     // ==========================
+    // Haptics (Android-friendly)
+    // ==========================
+    function haptic(pattern = 12){
+      try{
+        if (navigator && typeof navigator.vibrate === "function"){
+          navigator.vibrate(pattern);
+        }
+      } catch {}
+    }
+
+    // ==========================
     // Storage
     // ==========================
     const LS_KEY = "timer_history_v3";
@@ -2058,8 +2195,6 @@
     const CURR_KEY = "currency_symbol_v1";
     const POPUP_KEY = "tag_popup_enabled_v1";
     const GOALS_KEY = "goals_targets_v4";
-
-    // Calendar storage (NEW)
     const CAL_KEY = "calendar_jobs_v1";
 
     function loadHistory(){
@@ -2126,7 +2261,6 @@
       try{ localStorage.setItem(GOALS_KEY, JSON.stringify(obj)); } catch {}
     }
 
-    // Calendar storage helpers (NEW)
     function loadCalendar(){
       try{
         const raw = localStorage.getItem(CAL_KEY);
@@ -2145,11 +2279,9 @@
     let tagPopupEnabled = loadPopupEnabled();
     let goalsTargets = loadGoals();
 
-    // Calendar state (NEW)
     let calendarJobs = loadCalendar();
-    let calMonth = new Date();              // current month view
+    let calMonth = new Date();
     calMonth.setDate(1); calMonth.setHours(0,0,0,0);
-    let calSelectedKey = toDateKey(new Date());
 
     // ==========================
     // Money helpers
@@ -2210,6 +2342,7 @@
     const calendarBtn = document.getElementById("calendarBtn");
 
     function openMenu(){
+      haptic(10);
       menuDrawer.classList.add("open");
       menuOverlay.classList.add("show");
       menuOverlay.setAttribute("aria-hidden", "false");
@@ -2220,11 +2353,11 @@
       menuOverlay.setAttribute("aria-hidden", "true");
     }
     function toggleMenu(){
-      if (menuDrawer.classList.contains("open")) closeMenu();
+      if (menuDrawer.classList.contains("open")) { haptic(8); closeMenu(); }
       else openMenu();
     }
     menuBtn.addEventListener("click", toggleMenu);
-    menuOverlay.addEventListener("click", closeMenu);
+    menuOverlay.addEventListener("click", () => { haptic(8); closeMenu(); });
 
     // ==========================
     // Pages
@@ -2243,6 +2376,7 @@
     const calendarBack = document.getElementById("calendarBack");
 
     function openPage(pageEl){
+      haptic(10);
       closeMenu();
       closeSettings();
       closeSheet();
@@ -2254,6 +2388,7 @@
       if (pageEl === calendarPage) renderCalendar();
     }
     function closePage(pageEl){
+      haptic(8);
       pageEl.classList.remove("show");
     }
 
@@ -2283,6 +2418,7 @@
     }
 
     function openSettings(){
+      haptic(10);
       closeMenu();
       currencySelect.value = currencySymbol;
       applyToggleUI();
@@ -2297,13 +2433,14 @@
     }
 
     settingsBtn.addEventListener("click", openSettings);
-    settingsCloseBtn.addEventListener("click", closeSettings);
+    settingsCloseBtn.addEventListener("click", () => { haptic(8); closeSettings(); });
 
     settingsOverlay.addEventListener("click", (e) => {
-      if (e.target === settingsOverlay) closeSettings();
+      if (e.target === settingsOverlay) { haptic(8); closeSettings(); }
     });
 
     currencySelect.addEventListener("change", () => {
+      haptic(10);
       currencySymbol = currencySelect.value || "$";
       saveCurrency(currencySymbol);
 
@@ -2312,17 +2449,16 @@
       refreshGoalsPills();
       renderStats();
       renderPrediction();
-      renderCalendarList(); // currency not used here, but keeps UI fresh
 
       if (running) {
-        const elapsed = performance.now() - startAtPerf;
-        earningsFloat.textContent = formatMoney(calcEarnings(elapsed, hourlyRate));
+        earningsFloat.textContent = formatMoney(calcEarnings(getWorkElapsedNowMs(), hourlyRate));
       } else {
         earningsFloat.textContent = formatMoney(0);
       }
     });
 
     function togglePopupSetting(){
+      haptic(10);
       tagPopupEnabled = !tagPopupEnabled;
       savePopupEnabled(tagPopupEnabled);
       applyToggleUI();
@@ -2357,19 +2493,34 @@
     });
 
     // ==========================
-    // Timer logic
+    // Timer logic (work timer + break timer)
     // ==========================
     const control = document.getElementById("control");
     const btn = document.getElementById("actionBtn");
+    const breakBtn = document.getElementById("breakBtn");
     const timerEl = document.getElementById("timer");
+    const breakTimerEl = document.getElementById("breakTimer");
 
     let running = false;
-    let startAtPerf = 0;
+    let onBreak = false;
+
+    // Work timing: accumulated + current running segment
+    let workAccumMs = 0;
+    let workResumePerf = 0;
+
+    // Wall times
     let startAtWall = null;
+
+    // Break timing
+    let breakStartPerf = 0;
+    let breakStartWall = null;
+    let breakRafId = null;
+
+    // RAF
     let rafId = null;
 
-    // Goals progress is NOT synced with history. Only current session.
-    let goalsSessionAmount = 0;
+    // Break list for current session
+    let currentBreaks = [];
 
     // pending stop data
     let pendingDisplay = "00:00.00";
@@ -2378,6 +2529,7 @@
     let pendingDate = "";
     let pendingWhenISO = "";
     let pendingAmount = 0;
+    let pendingBreaks = [];
 
     let history = loadHistory();
 
@@ -2402,66 +2554,189 @@
       return d.toLocaleDateString(undefined, { day:"2-digit", month:"short", year:"numeric" });
     }
 
-    function getLiveSessionAmount(){
+    function getWorkElapsedNowMs(){
       if (!running) return 0;
-      const elapsed = performance.now() - startAtPerf;
-      return calcEarnings(elapsed, hourlyRate);
+      const now = performance.now();
+      let ms = workAccumMs;
+      if (!onBreak) ms += Math.max(0, now - workResumePerf);
+      return ms;
     }
 
-    function tick(now){
-      const elapsed = now - startAtPerf;
-      const liveAmt = calcEarnings(elapsed, hourlyRate);
+    function getLiveSessionAmount(){
+      if (!running) return 0;
+      return calcEarnings(getWorkElapsedNowMs(), hourlyRate);
+    }
 
-      timerEl.textContent = formatTime(elapsed);
+    function tickWork(now){
+      const elapsedWork = Math.max(0, workAccumMs + (now - workResumePerf));
+      const liveAmt = calcEarnings(elapsedWork, hourlyRate);
+
+      timerEl.textContent = formatTime(elapsedWork);
       earningsFloat.textContent = formatMoney(liveAmt);
 
-      goalsSessionAmount = liveAmt;
       updateGoalsProgressLive();
+      rafId = requestAnimationFrame(tickWork);
+    }
 
-      rafId = requestAnimationFrame(tick);
+    function tickBreak(now){
+      const elapsedBreak = Math.max(0, now - breakStartPerf);
+      breakTimerEl.textContent = formatTime(elapsedBreak);
+
+      // goals update still runs, but live work amount is frozen (workElapsed ignores break)
+      updateGoalsProgressLive();
+      breakRafId = requestAnimationFrame(tickBreak);
     }
 
     function start(){
+      haptic(12);
       hourlyRate = getRate();
       saveRate(hourlyRate);
 
-      goalsSessionAmount = 0;
-      updateGoalsProgressLive();
-
       running = true;
+      onBreak = false;
       control.classList.add("running");
+      control.classList.remove("onbreak");
+
       btn.textContent = "STOP";
       btn.setAttribute("aria-pressed", "true");
 
-      startAtPerf = performance.now();
+      breakBtn.textContent = "BREAK";
+
+      workAccumMs = 0;
+      workResumePerf = performance.now();
       startAtWall = new Date();
+
+      currentBreaks = [];
+      breakTimerEl.textContent = "00:00.00";
+
       timerEl.textContent = "00:00.00";
       earningsFloat.textContent = formatMoney(0);
 
-      rafId = requestAnimationFrame(tick);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(tickWork);
     }
 
-    function hardStopTimerCapture(){
-      const stopWall = new Date();
-      const elapsed = Math.max(0, performance.now() - startAtPerf);
+    function finalizeBreakRecord(endWall, endPerf){
+      if (!breakStartWall) return;
 
-      pendingDisplay = formatTime(elapsed);
+      const durMs = Math.max(0, endPerf - breakStartPerf);
+      const startISO = breakStartWall.toISOString();
+      const endISO = endWall.toISOString();
+
+      currentBreaks.push({
+        startISO,
+        endISO,
+        startLabel: formatClock(breakStartWall),
+        endLabel: formatClock(endWall),
+        durationMs: durMs,
+        duration: formatTime(durMs)
+      });
+
+      breakStartWall = null;
+      breakStartPerf = 0;
+    }
+
+    function enterBreak(){
+      if (!running || onBreak) return;
+
+      haptic([12, 40, 12]);
+
+      // lock in work accumulated so far, then pause work tick
+      const nowPerf = performance.now();
+      workAccumMs += Math.max(0, nowPerf - workResumePerf);
+
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+
+      // start break
+      onBreak = true;
+      control.classList.add("onbreak");
+
+      breakBtn.textContent = "STOP BREAK";
+
+      breakStartPerf = nowPerf;
+      breakStartWall = new Date();
+      breakTimerEl.textContent = "00:00.00";
+
+      if (breakRafId) cancelAnimationFrame(breakRafId);
+      breakRafId = requestAnimationFrame(tickBreak);
+    }
+
+    function exitBreak(resumeWork = true){
+      if (!running || !onBreak) return;
+
+      haptic(14);
+
+      const endPerf = performance.now();
+      const endWall = new Date();
+
+      if (breakRafId) cancelAnimationFrame(breakRafId);
+      breakRafId = null;
+
+      finalizeBreakRecord(endWall, endPerf);
+
+      onBreak = false;
+      control.classList.remove("onbreak");
+      breakBtn.textContent = "BREAK";
+      breakTimerEl.textContent = "00:00.00";
+
+      if (resumeWork){
+        workResumePerf = endPerf;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(tickWork);
+      }
+
+      updateGoalsProgressLive();
+    }
+
+    // Break button: toggles break mode
+    breakBtn.addEventListener("click", () => {
+      if (!running) return;
+
+      if (!onBreak) enterBreak();
+      else exitBreak(true);
+    });
+
+    function hardStopTimerCapture(){
+      haptic(18);
+
+      const stopWall = new Date();
+      const stopPerf = performance.now();
+
+      // If user stops while on break, close the break interval at stop time (but do not resume work)
+      if (onBreak){
+        if (breakRafId) cancelAnimationFrame(breakRafId);
+        breakRafId = null;
+        finalizeBreakRecord(stopWall, stopPerf);
+        onBreak = false;
+        control.classList.remove("onbreak");
+        breakBtn.textContent = "BREAK";
+        breakTimerEl.textContent = "00:00.00";
+      } else {
+        workAccumMs += Math.max(0, stopPerf - workResumePerf);
+      }
+
+      const elapsedWork = Math.max(0, workAccumMs);
+
+      pendingDisplay = formatTime(elapsedWork);
       pendingClockIn = startAtWall ? formatClock(startAtWall) : "";
       pendingClockOut = formatClock(stopWall);
       pendingDate = startAtWall ? formatDateOnly(startAtWall) : formatDateOnly(stopWall);
       pendingWhenISO = stopWall.toISOString();
-      pendingAmount = calcEarnings(elapsed, hourlyRate);
+      pendingAmount = calcEarnings(elapsedWork, hourlyRate);
 
-      goalsSessionAmount = pendingAmount;
-      updateGoalsProgressLive();
+      pendingBreaks = Array.isArray(currentBreaks) ? currentBreaks.slice() : [];
 
       running = false;
       control.classList.remove("running");
+
       btn.textContent = "START";
       btn.setAttribute("aria-pressed", "false");
 
       if (rafId) cancelAnimationFrame(rafId);
       rafId = null;
+
+      updateGoalsProgressLive();
     }
 
     function commitStopToHistory(tag, notes){
@@ -2476,13 +2751,15 @@
         whenISO: pendingWhenISO,
         tag: safeTag,
         notes: safeNotes,
-        amount: pendingAmount
+        amount: pendingAmount,
+        breaks: pendingBreaks || []
       });
 
       saveHistory();
       renderHistory();
       renderStats();
       renderPrediction();
+      updateGoalsProgressLive();
 
       resetAfterStop();
     }
@@ -2545,6 +2822,23 @@
         durationLine.className = "duration-line";
         durationLine.textContent = item.duration || "00:00.00";
 
+        left.appendChild(tagHeader);
+        left.appendChild(durationLine);
+
+        if (Array.isArray(item.breaks) && item.breaks.length){
+          for (const b of item.breaks){
+            const bl = document.createElement("div");
+            bl.className = "break-line";
+            const s = (b && b.startLabel) ? b.startLabel : "";
+            const e = (b && b.endLabel) ? b.endLabel : "";
+            const dur = (b && b.duration) ? b.duration : "";
+            const timeRange = (s && e) ? `${s} - ${e}` : "";
+            const durPart = dur ? ` • ${dur}` : "";
+            bl.textContent = timeRange ? `Break: ${timeRange}${durPart}` : `Break${durPart}`;
+            left.appendChild(bl);
+          }
+        }
+
         const clockLine = document.createElement("div");
         clockLine.className = "clock-line";
         const ci = item.clockIn || "";
@@ -2559,8 +2853,6 @@
         notesLine.className = "notes-line";
         notesLine.textContent = (item.notes || "").trim();
 
-        left.appendChild(tagHeader);
-        left.appendChild(durationLine);
         if (clockLine.textContent) left.appendChild(clockLine);
         if (dateLine.textContent) left.appendChild(dateLine);
         if (notesLine.textContent) left.appendChild(notesLine);
@@ -2627,8 +2919,8 @@
       }
     }
 
-    function openSheet(){ sheetOpen = true; setSheetY(openY, false); }
-    function closeSheet(){ sheetOpen = false; setSheetY(closedY, false); }
+    function openSheet(){ haptic(10); sheetOpen = true; setSheetY(openY, false); }
+    function closeSheet(){ haptic(8); sheetOpen = false; setSheetY(closedY, false); }
     function toggleSheet(){ sheetOpen ? closeSheet() : openSheet(); }
 
     overlay.addEventListener("click", () => closeSheet());
@@ -2697,6 +2989,7 @@
     const saveBtn = document.getElementById("saveBtn");
 
     function openSaveModal(){
+      haptic(10);
       modalSub.textContent = `Duration: ${pendingDisplay}`;
       tagInput.value = "";
       notesInput.value = "";
@@ -2713,6 +3006,7 @@
 
     function resetAfterStop(){
       timerEl.textContent = "00:00.00";
+      breakTimerEl.textContent = "00:00.00";
       earningsFloat.textContent = formatMoney(0);
 
       pendingDisplay = "00:00.00";
@@ -2721,25 +3015,39 @@
       pendingDate = "";
       pendingWhenISO = "";
       pendingAmount = 0;
+      pendingBreaks = [];
+
       startAtWall = null;
 
-      goalsSessionAmount = 0;
+      workAccumMs = 0;
+      workResumePerf = 0;
+
+      currentBreaks = [];
+      breakStartPerf = 0;
+      breakStartWall = null;
+
+      control.classList.remove("onbreak");
+      breakBtn.textContent = "BREAK";
+
       updateGoalsProgressLive();
     }
 
     cancelBtn.addEventListener("click", () => {
+      haptic(8);
       closeSaveModal();
       resetAfterStop();
     });
 
     modalOverlay.addEventListener("click", (e) => {
       if (e.target === modalOverlay){
+        haptic(8);
         closeSaveModal();
         resetAfterStop();
       }
     });
 
     saveBtn.addEventListener("click", () => {
+      haptic(14);
       const tag = tagInput.value;
       const notes = notesInput.value || "";
       closeSaveModal();
@@ -2755,8 +3063,18 @@
     const deleteConfirmBtn = document.getElementById("deleteConfirmBtn");
     let pendingDeleteIndex = null;
 
+    function escapeHtml(str){
+      return String(str || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
     function openDeleteModal(index){
       if (index == null || index < 0 || index >= history.length) return;
+      haptic(12);
       pendingDeleteIndex = index;
 
       const item = history[index];
@@ -2779,29 +3097,22 @@
       deleteOverlay.setAttribute("aria-hidden", "true");
     }
 
-    deleteCancelBtn.addEventListener("click", closeDeleteModal);
+    deleteCancelBtn.addEventListener("click", () => { haptic(8); closeDeleteModal(); });
     deleteOverlay.addEventListener("click", (e) => {
-      if (e.target === deleteOverlay) closeDeleteModal();
+      if (e.target === deleteOverlay) { haptic(8); closeDeleteModal(); }
     });
 
     deleteConfirmBtn.addEventListener("click", () => {
       if (pendingDeleteIndex == null) return;
+      haptic(22);
       history.splice(pendingDeleteIndex, 1);
       saveHistory();
       renderHistory();
       renderStats();
       renderPrediction();
+      updateGoalsProgressLive();
       closeDeleteModal();
     });
-
-    function escapeHtml(str){
-      return String(str || "")
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
 
     function attachLongPressDelete(el, index){
       let t = null;
@@ -2834,7 +3145,7 @@
     }
 
     // ==========================
-    // Goals (manual entry)
+    // GOALS (manual targets, progress synced to history + live)
     // ==========================
     const goalsWrap = document.getElementById("goalsWrap");
 
@@ -2846,8 +3157,76 @@
       { key:"yearly",   label:"Yearly Goal" }
     ];
 
-    function getGoalsProgress(){
-      return running ? getLiveSessionAmount() : goalsSessionAmount;
+    function startOfDay(d){
+      const x = new Date(d);
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    function addDays(d, days){
+      const x = new Date(d);
+      x.setDate(x.getDate() + days);
+      return x;
+    }
+
+    function goalPeriodStart(goalKey, now){
+      const n = startOfDay(now);
+
+      if (goalKey === "daily") return n;
+
+      if (goalKey === "weekly"){
+        const day = n.getDay(); // Sun=0..Sat=6
+        const offset = (day + 6) % 7; // Mon=0..Sun=6
+        return addDays(n, -offset);
+      }
+
+      if (goalKey === "biweekly"){
+        return addDays(n, -13);
+      }
+
+      if (goalKey === "monthly"){
+        const x = new Date(n.getFullYear(), n.getMonth(), 1);
+        x.setHours(0,0,0,0);
+        return x;
+      }
+
+      if (goalKey === "yearly"){
+        const x = new Date(n.getFullYear(), 0, 1);
+        x.setHours(0,0,0,0);
+        return x;
+      }
+
+      return n;
+    }
+
+    function sumHistoryBetween(start, end){
+      const a = start.getTime();
+      const b = end.getTime();
+      let sum = 0;
+
+      for (const item of history){
+        const amt = Number(item.amount);
+        if (!Number.isFinite(amt)) continue;
+
+        if (item.whenISO){
+          const dt = new Date(item.whenISO);
+          if (Number.isNaN(dt.getTime())) continue;
+          const t = dt.getTime();
+          if (t >= a && t <= b) sum += amt;
+        }
+      }
+      return sum;
+    }
+
+    function getGoalsProgressForKey(goalKey){
+      const now = new Date();
+      const start = goalPeriodStart(goalKey, now);
+      const end = now;
+
+      let total = sumHistoryBetween(start, end);
+      if (running) total += getLiveSessionAmount(); // paused during break (work amount frozen)
+
+      return total;
     }
 
     function renderGoalsUI(){
@@ -2873,7 +3252,7 @@
 
         const meta = document.createElement("div");
         meta.className = "goal-meta";
-        meta.textContent = running ? "Updating live…" : "Tap to set your goal";
+        meta.textContent = running ? (onBreak ? "On break (paused)…" : "Syncing history + live…") : "Synced with saved tags";
 
         left.appendChild(title);
         left.appendChild(meta);
@@ -2963,12 +3342,11 @@
       const cards = goalsWrap ? goalsWrap.children : [];
       if (!cards || !cards.length) return;
 
-      const current = getGoalsProgress();
-
       for (const card of cards){
         const def = card._def;
         if (!def) continue;
 
+        const current = getGoalsProgressForKey(def.key);
         const target = Number(goalsTargets[def.key]) || 0;
 
         let pct = 0;
@@ -2978,7 +3356,7 @@
         card._fill.style.width = (pct * 100).toFixed(1) + "%";
         card._bl.textContent = `${formatMoney(current)} / ${formatMoney(target)}`;
         card._br.textContent = `${pctText}%`;
-        card._meta.textContent = running ? "Updating live…" : "Tap to set your goal";
+        card._meta.textContent = running ? (onBreak ? "On break (paused)…" : "Syncing history + live…") : "Synced with saved tags";
       }
     }
 
@@ -2992,6 +3370,7 @@
     let activeGoalKey = null;
 
     function openGoalModal(key, label){
+      haptic(10);
       activeGoalKey = key;
 
       goalTitle.textContent = label;
@@ -3012,14 +3391,15 @@
       goalOverlay.setAttribute("aria-hidden", "true");
     }
 
-    goalCancelBtn.addEventListener("click", closeGoalModal);
+    goalCancelBtn.addEventListener("click", () => { haptic(8); closeGoalModal(); });
     goalOverlay.addEventListener("click", (e) => {
-      if (e.target === goalOverlay) closeGoalModal();
+      if (e.target === goalOverlay) { haptic(8); closeGoalModal(); }
     });
 
     goalSaveBtn.addEventListener("click", () => {
       if (!activeGoalKey) return;
 
+      haptic(14);
       const v = parseMoneyInput(goalAmountInput.value);
       goalsTargets[activeGoalKey] = v;
       saveGoals(goalsTargets);
@@ -3031,7 +3411,7 @@
     });
 
     // ==========================
-    // STATS
+    // STATS (unchanged)
     // ==========================
     const statSessions = document.getElementById("statSessions");
     const statSessionsMini = document.getElementById("statSessionsMini");
@@ -3051,7 +3431,7 @@
     const pieCtx = pieCanvas.getContext("2d");
 
     function computeTagStats(){
-      const map = new Map(); // tag => { tag, count, amount }
+      const map = new Map();
       let totalEarned = 0;
 
       for (const item of history){
@@ -3257,25 +3637,13 @@
     }
 
     // ==========================
-    // PREDICTIONS
+    // PREDICTIONS (unchanged)
     // ==========================
     const predCapDate = document.getElementById("predCapDate");
     const predChips = document.getElementById("predChips");
     const predSubtitle = document.getElementById("predSubtitle");
     const predList = document.getElementById("predList");
     const predEmpty = document.getElementById("predEmpty");
-
-    function startOfDay(d){
-      const x = new Date(d);
-      x.setHours(0,0,0,0);
-      return x;
-    }
-
-    function addDays(d, days){
-      const x = new Date(d);
-      x.setDate(x.getDate() + days);
-      return x;
-    }
 
     function daysInclusive(start, end){
       const a = startOfDay(start).getTime();
@@ -3296,7 +3664,7 @@
       const endDay = startOfDay(now);
       const startDay = addDays(endDay, -(windowDays - 1));
 
-      const map = new Map(); // dayKey => total
+      const map = new Map();
       for (const item of history){
         if (!item.whenISO) continue;
         const dt = new Date(item.whenISO);
@@ -3479,7 +3847,7 @@
     }
 
     // ==========================
-    // Calendar helpers (NEW)
+    // Calendar helpers + UI (unchanged)
     // ==========================
     function pad2(n){ return String(n).padStart(2, "0"); }
 
@@ -3501,7 +3869,6 @@
     }
 
     function dowMon0(jsDay){
-      // JS: Sun=0..Sat=6  -> Mon=0..Sun=6
       return (jsDay + 6) % 7;
     }
 
@@ -3522,9 +3889,6 @@
       return d.toLocaleDateString(undefined, { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
     }
 
-    // ==========================
-    // Calendar UI (NEW)
-    // ==========================
     const calMonthLabel = document.getElementById("calMonthLabel");
     const calDaysEl = document.getElementById("calDays");
     const calPrev = document.getElementById("calPrev");
@@ -3535,6 +3899,8 @@
     const calEmptyHint = document.getElementById("calEmptyHint");
     const calSelectedTitle = document.getElementById("calSelectedTitle");
     const calSelectedSub = document.getElementById("calSelectedSub");
+
+    let calSelectedKey = toDateKey(new Date());
 
     function renderCalendar(){
       calMonthLabel.textContent = monthLabel(calMonth);
@@ -3590,6 +3956,7 @@
         cell.appendChild(dots);
 
         cell.addEventListener("click", () => {
+          haptic(10);
           calSelectedKey = key;
           renderCalendar();
         });
@@ -3652,18 +4019,21 @@
     }
 
     calPrev.addEventListener("click", () => {
+      haptic(10);
       calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1);
       calMonth.setHours(0,0,0,0);
       renderCalendar();
     });
 
     calNext.addEventListener("click", () => {
+      haptic(10);
       calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1);
       calMonth.setHours(0,0,0,0);
       renderCalendar();
     });
 
     calToday.addEventListener("click", () => {
+      haptic(10);
       const t = new Date();
       calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
       calMonth.setHours(0,0,0,0);
@@ -3671,11 +4041,8 @@
       renderCalendar();
     });
 
-    calAddBtn.addEventListener("click", () => openJobModalForKey(calSelectedKey));
+    calAddBtn.addEventListener("click", () => { haptic(10); openJobModalForKey(calSelectedKey); });
 
-    // ==========================
-    // Calendar: Add Job modal (NEW)
-    // ==========================
     const jobOverlay = document.getElementById("jobOverlay");
     const jobSub = document.getElementById("jobSub");
     const jobTitleInput = document.getElementById("jobTitleInput");
@@ -3706,9 +4073,9 @@
       jobOverlay.setAttribute("aria-hidden", "true");
     }
 
-    jobCancelBtn.addEventListener("click", closeJobModal);
+    jobCancelBtn.addEventListener("click", () => { haptic(8); closeJobModal(); });
     jobOverlay.addEventListener("click", (e) => {
-      if (e.target === jobOverlay) closeJobModal();
+      if (e.target === jobOverlay) { haptic(8); closeJobModal(); }
     });
 
     function makeId(){
@@ -3716,13 +4083,13 @@
     }
 
     jobSaveBtn.addEventListener("click", () => {
+      haptic(14);
       const title = (jobTitleInput.value || "").trim() || "Work Job";
       const dateKey = (jobDateInput.value || "").trim() || calSelectedKey;
       const startTime = (jobStartInput.value || "").trim();
       const endTime = (jobEndInput.value || "").trim();
       const notes = (jobNotesInput.value || "").trim();
 
-      // Simple sanity: if both times exist and end < start, swap (keeps it idiot-proof)
       let st = startTime, et = endTime;
       if (st && et && et < st){
         const tmp = st; st = et; et = tmp;
@@ -3740,7 +4107,6 @@
 
       saveCalendar();
 
-      // Keep selected date on the saved date
       calSelectedKey = dateKey;
       const d = fromDateKey(dateKey);
       calMonth = new Date(d.getFullYear(), d.getMonth(), 1);
@@ -3750,9 +4116,6 @@
       renderCalendar();
     });
 
-    // ==========================
-    // Calendar: Delete Job modal (NEW)
-    // ==========================
     const jobDeleteOverlay = document.getElementById("jobDeleteOverlay");
     const jobDeleteDetails = document.getElementById("jobDeleteDetails");
     const jobDeleteCancelBtn = document.getElementById("jobDeleteCancelBtn");
@@ -3763,6 +4126,7 @@
       const job = calendarJobs.find(j => j.id === id);
       if (!job) return;
 
+      haptic(12);
       pendingJobDeleteId = id;
 
       const timeLine = (job.startTime && job.endTime) ? `${job.startTime} - ${job.endTime}` :
@@ -3784,13 +4148,14 @@
       jobDeleteOverlay.setAttribute("aria-hidden", "true");
     }
 
-    jobDeleteCancelBtn.addEventListener("click", closeJobDeleteModal);
+    jobDeleteCancelBtn.addEventListener("click", () => { haptic(8); closeJobDeleteModal(); });
     jobDeleteOverlay.addEventListener("click", (e) => {
-      if (e.target === jobDeleteOverlay) closeJobDeleteModal();
+      if (e.target === jobDeleteOverlay) { haptic(8); closeJobDeleteModal(); }
     });
 
     jobDeleteConfirmBtn.addEventListener("click", () => {
       if (!pendingJobDeleteId) return;
+      haptic(22);
       calendarJobs = calendarJobs.filter(j => j.id !== pendingJobDeleteId);
       saveCalendar();
       closeJobDeleteModal();
@@ -3812,10 +4177,8 @@
       currencySelect.value = currencySymbol;
       applyToggleUI();
 
-      goalsSessionAmount = 0;
       updateGoalsProgressLive();
 
-      // Calendar initial snap to current month/selected day
       const t = new Date();
       calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
       calMonth.setHours(0,0,0,0);
